@@ -74,28 +74,28 @@
   }
 
   .overall{
-    margin:20px 0 22px;padding:14px;display:flex;align-items:center;gap:14px;
+    margin:14px 0 4px;padding:13px 14px;
     background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius);
   }
+  .stop{display:flex;align-items:center;gap:13px;}
+  .sinfo{flex:1;min-width:0;}
   .ring{
-    --p:0;position:relative;width:64px;height:64px;flex:0 0 64px;border-radius:50%;
+    --p:0;position:relative;width:54px;height:54px;flex:0 0 54px;border-radius:50%;
     background:conic-gradient(var(--acc) 0%,var(--acc2) calc(var(--p)*1%),rgba(255,255,255,.07) 0);
     display:grid;place-items:center;
   }
-  .ring::before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--panel2);}
-  .overall .num{position:relative;font-size:15px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
-  .omet{min-width:0;}
-  .omet::before{
-    content:"MASTERY";display:block;font-family:var(--mono);font-size:10px;letter-spacing:.2em;
-    color:var(--faint);margin-bottom:3px;
+  .ring::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--panel2);}
+  .overall .num{position:relative;font-size:13.5px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
+  .overall .lbl{
+    font-family:var(--mono);font-size:10px;color:var(--faint);line-height:1.4;
+    margin-top:11px;padding-top:10px;border-top:1px solid var(--line);letter-spacing:.02em;
   }
-  .overall .lbl{font-size:12px;color:var(--muted);line-height:1.45;}
 
   nav{display:flex;flex-direction:column;gap:3px;}
   .navbtn{
     display:block;width:100%;text-align:left;cursor:pointer;position:relative;
     background:transparent;border:1px solid transparent;color:var(--soft);
-    border-radius:10px;padding:10px 12px;font:inherit;font-size:13.5px;line-height:1.35;
+    border-radius:10px;padding:8px 12px;font:inherit;font-size:13.5px;line-height:1.32;
     transition:background .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease);
   }
   .navbtn:hover{background:var(--panel2);color:var(--text);}
@@ -104,7 +104,8 @@
     box-shadow:inset 2.5px 0 0 var(--acc);
   }
   .navbtn .row{display:flex;align-items:baseline;gap:8px;justify-content:space-between;}
-  .navbtn .t{font-weight:600;}
+  .navbtn .row{min-width:0;}
+  .navbtn .t{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
   .navbtn .sc{
     font-family:var(--mono);font-size:10.5px;color:var(--faint);white-space:nowrap;
     font-variant-numeric:tabular-nums;letter-spacing:.02em;
@@ -122,17 +123,13 @@
   .resetbtn:hover{border-color:var(--bad);color:var(--bad);}
 
   /* ================= XP / STREAK ================= */
-  .xpcard{
-    margin:0 0 22px;padding:13px 14px;background:var(--panel2);
-    border:1px solid var(--line);border-radius:var(--radius);
-  }
   .xprow{display:flex;align-items:center;gap:8px;justify-content:space-between;}
   .lvl{
     font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;
     background:var(--grad);color:var(--acc-ink);border-radius:6px;padding:3px 7px;flex:none;
   }
   .rank{
-    font-size:12.5px;font-weight:600;color:var(--text);flex:1;min-width:0;
+    font-size:12.5px;font-weight:600;color:var(--text);margin:5px 0 0;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   }
   .flame{
@@ -140,7 +137,7 @@
     font-variant-numeric:tabular-nums;
   }
   .flame.hot{color:#ffb35c;}
-  .xpbar{height:3px;border-radius:99px;background:rgba(255,255,255,.06);margin:10px 0 7px;overflow:hidden;}
+  .xpbar{height:3px;border-radius:99px;background:rgba(255,255,255,.06);margin:8px 0 6px;overflow:hidden;}
   .xpbar i{display:block;height:100%;width:0;background:var(--grad);transition:width .5s var(--ease);}
   .xpfoot{display:flex;align-items:center;gap:8px;justify-content:space-between;}
   .xpmeta{font-family:var(--mono);font-size:10px;color:var(--faint);font-variant-numeric:tabular-nums;}
@@ -170,6 +167,52 @@
     #toasts{right:12px;left:12px;bottom:12px;align-items:center;}
     .toast{white-space:normal;text-align:center;}
   }
+
+  /* ================= KNOWLEDGE MAP ================= */
+  .skywrap{
+    position:relative;margin-top:18px;border-radius:var(--radius);overflow:hidden;
+    border:1px solid var(--line);
+    background:radial-gradient(120% 90% at 50% 12%, rgba(62,203,224,.07), transparent 60%),
+               linear-gradient(180deg,#0a1017,#070b10);
+  }
+  #sky{display:block;width:100%;height:440px;cursor:grab;touch-action:none;}
+  #sky.grabbing{cursor:grabbing;}
+  .skytip{
+    position:absolute;pointer-events:none;z-index:3;transform:translate(-50%,-140%);
+    background:rgba(10,16,22,.95);border:1px solid var(--line2);border-radius:9px;
+    padding:6px 10px;font-size:12px;line-height:1.45;white-space:nowrap;opacity:0;
+    transition:opacity .12s;box-shadow:0 8px 24px -10px rgba(0,0,0,.9);
+  }
+  .skytip.on{opacity:1;}
+  .skytip b{display:block;font-size:11px;color:var(--muted);font-weight:600;}
+  .skyhint{
+    position:absolute;left:14px;bottom:12px;font-family:var(--mono);font-size:10px;
+    letter-spacing:.1em;color:var(--faint);pointer-events:none;
+  }
+  .skyspin{
+    position:absolute;right:12px;top:12px;z-index:3;cursor:pointer;
+    background:rgba(16,23,32,.8);border:1px solid var(--line2);border-radius:8px;
+    color:var(--muted);font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+    padding:6px 10px;transition:border-color .15s,color .15s;
+  }
+  .skyspin:hover{border-color:var(--acc);color:var(--acc);}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:16px;}
+  .legend span{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);}
+  .legend i{width:9px;height:9px;border-radius:50%;flex:none;}
+  .mapstat{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:10px;margin-top:20px;
+  }
+  .mapstat div{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:11px 13px;}
+  .mapstat b{display:block;font-family:var(--serif);font-size:24px;font-weight:700;line-height:1.1;letter-spacing:-.02em;}
+  .mapstat small{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--faint);text-transform:uppercase;}
+  @media (max-width:900px){ #sky{height:340px;} }
+
+  /* ================= NAV SECTIONS ================= */
+  .navlabel{
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--faint);margin:16px 0 6px 12px;
+  }
+  .navlabel:first-child{margin-top:4px;}
 
   /* ================= PROFILES ================= */
   .pfchip{
@@ -245,7 +288,6 @@
   .emopick button.sel{border-color:var(--acc);background:var(--acc-soft);}
 
   body.noprofile aside .overall,
-  body.noprofile aside .xpcard,
   body.noprofile aside nav,
   body.noprofile aside .navsep,
   body.noprofile aside .resetbtn,
@@ -472,17 +514,19 @@
     <button class="pfchip" id="pfchip"><span class="av" id="pfav">🐕</span><span class="nm" id="pfnm"></span><span class="sw">SWITCH</span></button>
     <button class="menutoggle" id="menutoggle">☰ Topics &amp; modes</button>
     <div class="overall">
-      <div class="ring" id="ring"><span class="num" id="overallNum">—</span></div>
-      <div class="omet"><div class="lbl" id="overallLbl">no questions answered yet</div></div>
-    </div>
-    <div class="xpcard">
-      <div class="xprow">
-        <span class="lvl" id="xplvl">LVL 1</span>
-        <span class="rank" id="xprank">Novice Handler</span>
-        <span class="flame" id="xpstreak">no streak</span>
+      <div class="stop">
+        <div class="ring" id="ring"><span class="num" id="overallNum">—</span></div>
+        <div class="sinfo">
+          <div class="xprow">
+            <span class="lvl" id="xplvl">LVL 1</span>
+            <span class="flame" id="xpstreak">no streak</span>
+          </div>
+          <div class="rank" id="xprank">Novice Handler</div>
+          <div class="xpbar"><i id="xpfill"></i></div>
+          <div class="xpfoot"><span class="xpmeta" id="xpmeta">0 XP</span><span class="dots" id="xpdots"></span></div>
+        </div>
       </div>
-      <div class="xpbar"><i id="xpfill"></i></div>
-      <div class="xpfoot"><span class="xpmeta" id="xpmeta">0 XP</span><span class="dots" id="xpdots"></span></div>
+      <div class="lbl" id="overallLbl">no questions answered yet</div>
     </div>
     <nav id="nav"></nav>
     <div class="navsep"></div>
@@ -1072,7 +1116,8 @@ function renderXP(){
   $("#xplvl").textContent = "LVL "+lv;
   $("#xprank").textContent = RANKS[lv-1];
   $("#xpfill").style.width = (capped ? 100 : Math.round(100*(x.p-base)/(next-base)))+"%";
-  $("#xpmeta").textContent = capped ? x.p+" XP · max rank" : (x.p-base)+" / "+(next-base)+" XP to LVL "+(lv+1);
+  $("#xpmeta").textContent = capped ? x.p+" XP · MAX" : (x.p-base)+"/"+(next-base)+" XP";
+  $("#xpmeta").title = capped ? "Maximum rank reached" : (next-x.p)+" XP to level "+(lv+1);
 
   const live = x.day === dayKey() || x.day === dayShift(-1);
   const fl = $("#xpstreak");
@@ -1278,8 +1323,30 @@ function pfDeleteModal(p){
 /* ============================================================
    SIDEBAR
    ============================================================ */
+// Sidebar labels: one line each, so the whole nav fits without scrolling.
+// The full title still heads the topic page and the tooltip.
+const SHORT = {
+  foundations:"Classical Conditioning",
+  operant:"Operant & Quadrants",
+  reinforcers:"Reinforcers",
+  punishment:"Punishment",
+  schedules:"Schedules",
+  clicker:"Clicker Training",
+  charging:"Charging the Clicker",
+  shaping:"Shaping & Games",
+  constraints:"Drift & Taste Aversion"
+};
+
+function navLabel(text){
+  const d = document.createElement("div");
+  d.className = "navlabel";
+  d.textContent = text;
+  nav.appendChild(d);
+}
+
 function renderNav(){
   nav.innerHTML = "";
+  navLabel("Topics");
   TOPICS.forEach(t=>{
     const tm = topicMastery(t);
     const total = t.questions.length;
@@ -1287,14 +1354,16 @@ function renderNav(){
     const started = tm.m + tm.weak > 0;
     const btn = document.createElement("button");
     btn.className = "navbtn" + (current===t.id ? " active":"");
+    btn.title = t.title;
     btn.innerHTML =
-      '<div class="row"><span class="t">'+esc(t.title)+'</span>'+
+      '<div class="row"><span class="t">'+esc(SHORT[t.id] || t.title)+'</span>'+
       '<span class="sc">'+(started? tm.m+"/"+total+" ✓" : total+" q")+'</span></div>'+
       '<div class="bar"><i class="'+(p===100?"full":"")+'" style="width:'+p+'%"></i></div>';
     btn.onclick = ()=>{ current=t.id; showTopic(t.id); closeMenu(); };
     nav.appendChild(btn);
   });
 
+  navLabel("Practice");
   const wk = weakCounts();
   const dr = document.createElement("button");
   dr.className = "navbtn" + (current==="__drill" ? " active":"");
@@ -1341,14 +1410,23 @@ function renderNav(){
   mx.onclick = ()=>{ current="__mixed"; showMixedIntro(); closeMenu(); };
   nav.appendChild(mx);
 
+  navLabel("Progress");
+  const oc0 = weakCounts();
+  const mapb = document.createElement("button");
+  mapb.className = "navbtn" + (current==="__map" ? " active":"");
+  mapb.innerHTML =
+    '<div class="row"><span class="t">🌌 Knowledge map</span>'+
+    '<span class="sc">'+oc0.m+"/"+TOTAL_Q+'</span></div>';
+  mapb.onclick = ()=>{ current="__map"; showMap(); closeMenu(); };
+  nav.appendChild(mapb);
+
   const oc = weakCounts();
   const touched = Object.keys(state.q).length > 0;   // any answered question, incl. first-time-right
   const opct = Math.round(100*oc.m/TOTAL_Q);
   $("#overallNum").textContent = touched ? opct+"%" : "—";
   $("#ring").style.setProperty("--p", touched ? opct : 0);
-  $("#overallLbl").textContent = touched
-    ? oc.m+" of "+TOTAL_Q+" mastered (2 right in a row)"
-    : "no questions answered yet";
+  $("#overallLbl").textContent = touched ? oc.m+"/"+TOTAL_Q+" MASTERED" : "NOTHING ANSWERED YET";
+  $("#overallLbl").title = "Mastered = answered right twice in a row";
   renderXP();
 }
 
@@ -1551,6 +1629,223 @@ function rapidResult(){
   $("#rapidagain").onclick = startRapid;
   $("#rapidback").onclick = showConfusables;
   renderNav(); window.scrollTo(0,0);
+}
+
+/* ============================================================
+   KNOWLEDGE MAP — every question as a point on a rotating sphere,
+   grouped into per-topic constellations, lit by your real state.
+   Hand-rolled 3D projection: no library, no external assets.
+   ============================================================ */
+const SKY_COL = {
+  unseen:  {c:"#41556b", glow:0,   label:"Never seen"},
+  learning:{c:"#3ecbe0", glow:6,   label:"Learning · 1 right"},
+  weak:    {c:"#f2606a", glow:6,   label:"Needs work"},
+  due:     {c:"#ffd97d", glow:10,  label:"Due for review"},
+  mastered:{c:"#59e3b3", glow:12,  label:"Mastered"}
+};
+function nodeState(qid){
+  const s = state.q[qid];
+  if(!s || !s.s) return "unseen";
+  if(s.k >= 2)   return (s.due && s.due <= Date.now()) ? "due" : "mastered";
+  if(s.k === 0 || s.r < s.s) return "weak";
+  return "learning";
+}
+
+function showMap(){
+  current = "__map";
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Each topic gets its own cap on the sphere, so the nine topics read as
+  // nine distinct constellations rather than one interleaved web.
+  const GA = Math.PI * (3 - Math.sqrt(5)), CAP = 0.40;   // cap radius in radians
+  const nodes = [];
+  TOPICS.forEach((t, ti) => {
+    // topic centre, spread evenly via Fibonacci sphere
+    const cy0 = 1 - ((ti + 0.5) / TOPICS.length) * 2;      // inset: never lands on a pole
+    const cr  = Math.sqrt(Math.max(0, 1 - cy0*cy0));
+    const cth = GA * ti;
+    const C = [Math.cos(cth) * cr, cy0, Math.sin(cth) * cr];
+    // orthonormal basis (u, v) perpendicular to C
+    const ref = Math.abs(C[1]) < 0.9 ? [0,1,0] : [1,0,0];
+    let u = [C[1]*ref[2]-C[2]*ref[1], C[2]*ref[0]-C[0]*ref[2], C[0]*ref[1]-C[1]*ref[0]];
+    let ul = Math.hypot(u[0],u[1],u[2]); u = u.map(x=>x/ul);
+    const v = [C[1]*u[2]-C[2]*u[1], C[2]*u[0]-C[0]*u[2], C[0]*u[1]-C[1]*u[0]];
+    const n = t.questions.length;
+    t.questions.forEach((q, j) => {
+      const a = GA * j;                                  // deterministic sunflower packing
+      const rr = CAP * Math.sqrt((j + 0.5) / n);
+      const sr = Math.sin(rr), cs = Math.cos(rr);
+      nodes.push({
+        ti, tid:t.id, title:t.title, qid:q.qid,
+        px: C[0]*cs + (u[0]*Math.cos(a) + v[0]*Math.sin(a)) * sr,
+        py: C[1]*cs + (u[1]*Math.cos(a) + v[1]*Math.sin(a)) * sr,
+        pz: C[2]*cs + (u[2]*Math.cos(a) + v[2]*Math.sin(a)) * sr
+      });
+    });
+  });
+  const N = nodes.length;
+
+  // Constellation edges: link each star to its two nearest neighbours in the
+  // same topic. Short, tidy lines that trace each cluster's shape.
+  const edges = [];
+  TOPICS.forEach((t, ti) => {
+    const grp = nodes.map((n,i)=>({n,i})).filter(o=>o.n.ti===ti);
+    const seen = new Set();
+    grp.forEach(o => {
+      const d = grp.filter(p=>p!==o).map(p=>({p, d:Math.hypot(p.n.px-o.n.px, p.n.py-o.n.py, p.n.pz-o.n.pz)}))
+                   .sort((a,b)=>a.d-b.d).slice(0,2);
+      d.forEach(({p}) => {
+        const key = Math.min(o.i,p.i)+"-"+Math.max(o.i,p.i);
+        if(!seen.has(key)){ seen.add(key); edges.push([o.i, p.i]); }
+      });
+    });
+  });
+
+  const counts = {unseen:0, learning:0, weak:0, due:0, mastered:0};
+  nodes.forEach(n => counts[nodeState(n.qid)]++);
+
+  main.innerHTML =
+    '<div class="kicker">Knowledge map</div>'+
+    '<h1>Your constellation</h1>'+
+    '<p class="summary">All '+N+' questions, one point each, grouped into a constellation per topic. '+
+      'Every point is lit by how you are actually doing with it — so the dark patches are exactly where the work is.</p>'+
+    '<div class="skywrap">'+
+      '<canvas id="sky"></canvas>'+
+      '<div class="skytip" id="skytip"></div>'+
+      '<button class="skyspin" id="skyspin">'+(reduce ? "▶ SPIN" : "❚❚ PAUSE")+'</button>'+
+      '<div class="skyhint">DRAG TO ROTATE · CLICK A STAR</div>'+
+    '</div>'+
+    '<div class="legend">'+Object.keys(SKY_COL).map(k=>
+      '<span><i style="background:'+SKY_COL[k].c+'"></i>'+SKY_COL[k].label+' · '+counts[k]+'</span>').join("")+
+    '</div>'+
+    '<div class="mapstat">'+
+      '<div><b>'+counts.mastered+'</b><small>mastered</small></div>'+
+      '<div><b>'+counts.due+'</b><small>due now</small></div>'+
+      '<div><b>'+(counts.weak+counts.learning)+'</b><small>in progress</small></div>'+
+      '<div><b>'+counts.unseen+'</b><small>untouched</small></div>'+
+    '</div>';
+
+  const cv = $("#sky"), ctx = cv.getContext("2d"), tip = $("#skytip");
+  let rot = 0.6, tilt = -0.32, drag = null, spin = reduce ? 0 : 0.0022, hover = null;
+
+  function size(){
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = cv.clientWidth * dpr; cv.height = cv.clientHeight * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  size();
+  window.addEventListener("resize", size);
+
+  const CAM = 3.4;
+  function project(n, cx, cy, R){
+    const cr = Math.cos(rot), sr = Math.sin(rot);
+    const x1 =  n.px * cr - n.pz * sr;
+    const z1 =  n.px * sr + n.pz * cr;
+    const ct = Math.cos(tilt), st = Math.sin(tilt);
+    const y1 =  n.py * ct - z1 * st;
+    const z2 =  n.py * st + z1 * ct;
+    const p  =  CAM / (CAM - z2);
+    return {x: cx + x1 * R * p, y: cy + y1 * R * p, z: z2, p};
+  }
+
+  function frame(){
+    if(!document.body.contains(cv)) return;          // view changed → stop the loop
+    const w = cv.clientWidth, h = cv.clientHeight;
+    const cx = w/2, cy = h/2, R = Math.min(w, h) * 0.40;
+    ctx.clearRect(0, 0, w, h);
+    if(!drag) rot += spin;
+
+    const pts = nodes.map(n => {
+      const pr = project(n, cx, cy, R);
+      return {n, pr, st: nodeState(n.qid)};
+    });
+
+    // constellation lines (drawn behind the stars)
+    ctx.lineWidth = 1;
+    edges.forEach(([i, j])=>{
+      const a = pts[i], b = pts[j];
+      const depth = (a.pr.z + b.pr.z) / 2;
+      ctx.strokeStyle = "rgba(120,175,205," + (0.06 + 0.16 * (depth + 1) / 2).toFixed(3) + ")";
+      ctx.beginPath(); ctx.moveTo(a.pr.x, a.pr.y); ctx.lineTo(b.pr.x, b.pr.y); ctx.stroke();
+    });
+
+    pts.sort((a, b) => a.pr.z - b.pr.z);             // painter's algorithm: back to front
+    pts.forEach(p => {
+      const col = SKY_COL[p.st];
+      const near = (p.pr.z + 1) / 2;                 // 0 = far side, 1 = near side
+      const rad = (p.st === "unseen" ? 1.9 : 2.6) * p.pr.p;
+      ctx.globalAlpha = 0.30 + 0.70 * near;
+      if(col.glow){
+        ctx.shadowBlur = col.glow * p.pr.p;
+        ctx.shadowColor = col.c;
+      }
+      ctx.fillStyle = col.c;
+      ctx.beginPath(); ctx.arc(p.pr.x, p.pr.y, rad, 0, 6.284); ctx.fill();
+      ctx.shadowBlur = 0;
+      if(hover && hover.qid === p.n.qid){
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = "#e9f0f8"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(p.pr.x, p.pr.y, rad + 4, 0, 6.284); ctx.stroke();
+      }
+    });
+    ctx.globalAlpha = 1;
+    cv.__pts = pts;
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  function pick(ev){
+    const r = cv.getBoundingClientRect();
+    const mx = ev.clientX - r.left, my = ev.clientY - r.top;
+    let best = null, bd = 14;
+    (cv.__pts || []).forEach(p => {
+      const d = Math.hypot(p.pr.x - mx, p.pr.y - my);
+      if(d < bd && p.pr.z > -0.85){ bd = d; best = p; }   // ignore points on the far side
+    });
+    return best;
+  }
+
+  cv.addEventListener("pointerdown", e=>{
+    drag = {x:e.clientX, y:e.clientY, rot, tilt, moved:false};
+    cv.classList.add("grabbing"); cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener("pointermove", e=>{
+    if(drag){
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if(Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
+      rot  = drag.rot + dx * 0.008;
+      tilt = Math.max(-1.2, Math.min(1.2, drag.tilt + dy * 0.006));
+      return;
+    }
+    const p = pick(e);
+    hover = p ? p.n : null;
+    if(p){
+      const s = state.q[p.n.qid], st = SKY_COL[p.st];
+      tip.innerHTML = '<b>'+esc(p.n.title)+'</b>'+st.label+
+        (s && s.s ? ' · seen '+s.s+'×' : '');
+      tip.style.left = p.pr.x + "px"; tip.style.top = p.pr.y + "px";
+      tip.classList.add("on");
+    } else tip.classList.remove("on");
+  });
+  const endDrag = e=>{
+    if(drag && !drag.moved){
+      const p = pick(e);
+      if(p){ current = p.n.tid; showTopic(p.n.tid); return; }   // click a star → open its topic
+    }
+    drag = null; cv.classList.remove("grabbing");
+  };
+  cv.addEventListener("pointerup", endDrag);
+  cv.addEventListener("pointercancel", ()=>{ drag = null; cv.classList.remove("grabbing"); });
+  cv.addEventListener("pointerleave", ()=>{ hover = null; tip.classList.remove("on"); });
+
+  // Motion defaults to the OS preference, but stays an explicit opt-in either way.
+  $("#skyspin").onclick = ()=>{
+    spin = spin ? 0 : 0.0022;
+    $("#skyspin").textContent = spin ? "❚❚ PAUSE" : "▶ SPIN";
+  };
+
+  renderNav();
+  window.scrollTo(0,0);
 }
 
 /* ============================================================
