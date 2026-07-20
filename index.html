@@ -171,6 +171,87 @@
     .toast{white-space:normal;text-align:center;}
   }
 
+  /* ================= PROFILES ================= */
+  .pfchip{
+    display:flex;align-items:center;gap:9px;width:100%;margin:16px 0 0;cursor:pointer;
+    background:var(--panel2);border:1px solid var(--line);border-radius:12px;
+    padding:8px 10px;font:inherit;color:var(--text);text-align:left;
+    transition:border-color .15s,background .15s;
+  }
+  .pfchip:hover{border-color:var(--acc-line);background:var(--panel3);}
+  .pfchip .av{
+    width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:16px;
+  }
+  .pfchip .nm{flex:1;min-width:0;font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pfchip .sw{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--faint);flex:none;}
+
+  .pfwrap{max-width:620px;}
+  .pfgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:12px;margin-top:8px;}
+  .pfcard{
+    position:relative;cursor:pointer;font:inherit;color:var(--text);text-align:center;
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 12px 16px;
+    transition:border-color .16s var(--ease),background .16s var(--ease),transform .16s var(--ease);
+  }
+  .pfcard:hover{border-color:var(--acc-line);background:var(--panel2);}
+  .pfcard .av{width:56px;height:56px;border-radius:50%;margin:0 auto 11px;display:grid;place-items:center;font-size:28px;}
+  .pfcard b{display:block;font-family:var(--serif);font-size:16.5px;font-weight:700;letter-spacing:-.01em;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pfcard small{display:block;font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:5px;letter-spacing:.02em;}
+  .pfcard.new{border-style:dashed;color:var(--muted);}
+  .pfcard.new .av{background:var(--acc-soft);color:var(--acc);font-size:24px;}
+  .pftools{display:none;gap:6px;justify-content:center;margin-top:11px;}
+  .pfgrid.editing .pftools{display:flex;}
+  .pfgrid.editing .pfcard.new{opacity:.3;pointer-events:none;}
+  .pftool{
+    width:32px;height:30px;border-radius:8px;border:1px solid var(--line2);background:var(--panel3);
+    font-size:13px;cursor:pointer;color:var(--soft);transition:border-color .15s;
+  }
+  .pftool:hover{border-color:var(--acc);}
+  .pfmanage{
+    margin-top:20px;background:none;border:none;color:var(--faint);font:inherit;font-size:13px;
+    cursor:pointer;padding:6px 0;transition:color .15s;
+  }
+  .pfmanage:hover{color:var(--acc);}
+
+  #modal:empty{display:none;}
+  .ovl{
+    position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:20px;
+    background:rgba(4,8,12,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  }
+  .mcard{
+    width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line2);
+    border-radius:16px;padding:24px;box-shadow:0 30px 70px -20px rgba(0,0,0,.9);
+  }
+  .mcard h3{font-family:var(--serif);font-size:21px;margin:0 0 6px;font-weight:700;letter-spacing:-.01em;}
+  .mcard p{color:var(--muted);font-size:13.5px;margin:0 0 16px;line-height:1.6;}
+  .mcard input{
+    width:100%;font:inherit;font-size:16px;color:var(--text);background:var(--panel2);
+    border:1px solid var(--line2);border-radius:11px;padding:12px 14px;margin-bottom:14px;
+  }
+  .mcard input:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(62,203,224,.15);}
+  .mcard .btn{width:100%;}
+  .mcard .btn.danger{background:linear-gradient(180deg,#f4737c,#e04b56);color:#fff;box-shadow:none;}
+  .mcancel{
+    display:block;width:100%;margin-top:10px;background:none;border:none;color:var(--faint);
+    font:inherit;font-size:13px;cursor:pointer;padding:8px;
+  }
+  .mcancel:hover{color:var(--text);}
+  .emopick{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
+  .emopick button{
+    width:38px;height:38px;border-radius:10px;font-size:19px;cursor:pointer;
+    background:var(--panel2);border:1px solid var(--line);transition:border-color .15s,transform .15s;
+  }
+  .emopick button:hover{border-color:var(--acc-line);}
+  .emopick button.sel{border-color:var(--acc);background:var(--acc-soft);}
+
+  body.noprofile aside .overall,
+  body.noprofile aside .xpcard,
+  body.noprofile aside nav,
+  body.noprofile aside .navsep,
+  body.noprofile aside .resetbtn,
+  body.noprofile aside .pfchip,
+  body.noprofile .menutoggle{display:none !important;}
+
   /* ================= MAIN ================= */
   main{flex:1;min-width:0;padding:44px 48px 110px;max-width:860px;}
   h1{
@@ -388,6 +469,7 @@
 <div class="app">
   <aside id="aside">
     <div class="brand">Learning Theory<small>Dog training · 25 slides · 101 questions</small></div>
+    <button class="pfchip" id="pfchip"><span class="av" id="pfav">🐕</span><span class="nm" id="pfnm"></span><span class="sw">SWITCH</span></button>
     <button class="menutoggle" id="menutoggle">☰ Topics &amp; modes</button>
     <div class="overall">
       <div class="ring" id="ring"><span class="num" id="overallNum">—</span></div>
@@ -409,6 +491,7 @@
   <main id="main"></main>
 </div>
 <div id="toasts"></div>
+<div id="modal"></div>
 
 <script>
 /* ============================================================
@@ -796,24 +879,41 @@ const RAPID = [
 /* ============================================================
    STATE
    ============================================================ */
-const KEY = "learning-theory-study-v1";
-let state = load();
+const LEGACY = "learning-theory-study-v1";        // pre-profiles single-user key (kept as backup)
+const PREG   = "learning-theory-profiles";        // profile registry
+const pkey   = id => "learning-theory-study-p_" + id;
 
-function load(){
+let REG = null, PID = null;                       // registry, active profile id
+try{ REG = JSON.parse(localStorage.getItem(PREG) || "null"); }catch(e){}
+if(!REG || !Array.isArray(REG.list)) REG = {list:[], last:null};
+function saveReg(){ try{ localStorage.setItem(PREG, JSON.stringify(REG)); }catch(e){} }
+
+function blankState(){
+  return {
+    best:{}, seen:{}, q:{},
+    scope:{mixed:"__all", drill:"__all", exam:"__all"},
+    xp:{p:0, day:null, streak:0, best:0, hist:[]}
+  };
+}
+function load(id){
   let s = null;
   try{
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(pkey(id));
     if(raw) s = JSON.parse(raw);
   }catch(e){}
-  if(!s) s = {best:{},seen:{}};
-  if(!s.q) s.q = {};   // per-question stats: {qid:{s:seen, r:right, k:streak}}
-  if(!s.scope) s.scope = {mixed:"__all", drill:"__all", exam:"__all"};
-  if(!s.xp) s.xp = {p:0, day:null, streak:0, best:0, hist:[]};   // points, last active day, streaks, day history
+  const d = blankState();
+  if(!s) return d;
+  if(!s.q) s.q = d.q;
+  if(!s.best) s.best = d.best;
+  if(!s.scope) s.scope = d.scope;
+  if(!s.xp) s.xp = d.xp;
   return s;
 }
 function save(){
-  try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+  if(!PID) return;                                // no profile chosen → nothing to persist
+  try{ localStorage.setItem(pkey(PID), JSON.stringify(state)); }catch(e){}
 }
+let state = blankState();
 
 /* ============================================================
    HELPERS
@@ -988,6 +1088,194 @@ function renderXP(){
 }
 
 /* ============================================================
+   PROFILES — one study record per person on this device,
+   same pattern as Hound Master (registry + per-profile key).
+   ============================================================ */
+const PF_EMO = ["🐕","🦮","🐩","🐕‍🦺","🐺","🦊","🐾","🎾"];
+const PF_BG  = ["rgba(62,203,224,.16)","rgba(89,227,179,.16)","rgba(167,139,250,.16)","rgba(255,179,92,.16)",
+                "rgba(242,96,106,.16)","rgba(255,217,125,.16)","rgba(120,180,255,.16)","rgba(255,255,255,.08)"];
+const pfBg = p => PF_BG[(p.bg||0) % PF_BG.length];
+
+function pfStats(id){
+  let s = null;
+  try{ s = JSON.parse(localStorage.getItem(pkey(id)) || "null"); }catch(e){}
+  if(!s) return {lv:1, mastered:0, streak:0, fresh:true};
+  const xp = (s.xp && s.xp.p) || 0;
+  return {
+    lv: levelOf(xp),
+    mastered: Object.values(s.q || {}).filter(v => v && v.k >= 2).length,
+    streak: (s.xp && s.xp.streak) || 0,
+    fresh: !s.q || !Object.keys(s.q).length
+  };
+}
+
+// One-time rescue of progress made before profiles existed.
+function migrateLegacy(){
+  if(REG.list.length) return;
+  let old = null;
+  try{ old = JSON.parse(localStorage.getItem(LEGACY) || "null"); }catch(e){}
+  if(!old || !old.q || !Object.keys(old.q).length) return;   // nothing worth keeping
+  const id = "p" + Date.now().toString(36);
+  REG.list.push({id, name:"My progress", emoji:PF_EMO[0], bg:0});
+  REG.last = id;
+  try{ localStorage.setItem(pkey(id), JSON.stringify(old)); }catch(e){}
+  saveReg();                                                  // legacy key left untouched as a backup
+}
+
+function pfChip(){
+  const p = REG.list.find(x => x.id === PID);
+  if(!p) return;
+  $("#pfav").textContent = p.emoji;
+  $("#pfav").style.background = pfBg(p);
+  $("#pfnm").textContent = p.name;
+}
+
+function enterProfile(id){
+  const p = REG.list.find(x => x.id === id);
+  if(!p) return;
+  PID = id;
+  state = load(id);
+  REG.last = id; saveReg();
+  document.body.classList.remove("noprofile");
+  pfChip();
+  if(duePool().length){ current = "__due"; showDueIntro(); }
+  else showTopic(TOPICS[0].id);
+}
+
+function showProfiles(){
+  stopExamTimer();
+  save();                                    // flush the outgoing profile before switching
+  PID = null;
+  document.body.classList.add("noprofile");
+  closeMenu();
+
+  const cards = REG.list.map(p => {
+    const st = pfStats(p.id);
+    const line = st.fresh ? "not started"
+      : "LVL " + st.lv + " · " + st.mastered + " mastered" + (st.streak > 1 ? " · 🔥" + st.streak : "");
+    // A div, not a button: the rename/delete controls are real buttons and the
+    // HTML parser refuses to nest them inside one, hoisting them out of the card.
+    return '<div class="pfcard" role="button" tabindex="0" data-pid="'+p.id+'" aria-label="'+esc(p.name)+'">'+
+      '<span class="av" style="background:'+pfBg(p)+'">'+p.emoji+'</span>'+
+      '<b>'+esc(p.name)+'</b><small>'+esc(line)+'</small>'+
+      '<span class="pftools">'+
+        '<button class="pftool" data-ren="'+p.id+'" title="Rename">✏️</button>'+
+        '<button class="pftool" data-del="'+p.id+'" title="Delete">🗑️</button>'+
+      '</span></div>';
+  }).join("");
+
+  main.innerHTML =
+    '<div class="pfwrap">'+
+      '<div class="kicker">Who’s studying?</div>'+
+      '<h1>Choose a profile</h1>'+
+      '<p class="summary">Each profile keeps its own mastery record, review schedule, XP and streak on this device — so more than one person can work through the deck without mixing up progress.</p>'+
+      '<div class="pfgrid" id="pfgrid">'+cards+
+        '<button class="pfcard new" id="pfnew"><span class="av">＋</span><b>New profile</b><small>start fresh</small></button>'+
+      '</div>'+
+      (REG.list.length ? '<button class="pfmanage" id="pfmanage">Manage profiles</button>' : '')+
+    '</div>';
+
+  const grid = $("#pfgrid");
+  grid.querySelectorAll(".pfcard[data-pid]").forEach(c=>{
+    c.onclick = e=>{
+      const ren = e.target.closest("[data-ren]"), del = e.target.closest("[data-del]");
+      if(ren){ pfNameModal(REG.list.find(x=>x.id===ren.dataset.ren)); return; }
+      if(del){ pfDeleteModal(REG.list.find(x=>x.id===del.dataset.del)); return; }
+      if(grid.classList.contains("editing")) return;
+      enterProfile(c.dataset.pid);
+    };
+    c.onkeydown = e=>{                                  // div needs explicit keyboard activation
+      if(e.target !== c) return;
+      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); c.onclick(e); }
+    };
+  });
+  $("#pfnew").onclick = ()=> pfNameModal(null);
+  if($("#pfmanage")) $("#pfmanage").onclick = ()=>{
+    grid.classList.toggle("editing");
+    $("#pfmanage").textContent = grid.classList.contains("editing") ? "Done" : "Manage profiles";
+  };
+  window.scrollTo(0,0);
+}
+
+/* ---- modal ---- */
+function closeModal(){ $("#modal").innerHTML = ""; }
+function openModal(html, onOpen){
+  const root = $("#modal");
+  root.innerHTML = '<div class="ovl"><div class="mcard">'+html+'</div></div>';
+  root.querySelector(".ovl").addEventListener("click", e=>{
+    if(e.target.classList.contains("ovl")) closeModal();
+  });
+  if(onOpen) onOpen();
+}
+document.addEventListener("keydown", e=>{ if(e.key === "Escape") closeModal(); });
+
+function pfNameModal(p){                       // p === null → create a new profile
+  let emo = p ? p.emoji : PF_EMO[REG.list.length % PF_EMO.length];
+  openModal(
+    '<h3>'+(p ? "Rename profile" : "New profile")+'</h3>'+
+    '<p>'+(p ? "Progress stays exactly where it is." : "Pick a name and an icon. Your mastery, streak and review queue start fresh.")+'</p>'+
+    '<input id="pfin" maxlength="18" placeholder="e.g. Rémi" value="'+(p ? esc(p.name).replace(/"/g,"&quot;") : "")+'">'+
+    '<div class="emopick" id="emopick">'+PF_EMO.map(x=>
+      '<button data-e="'+x+'"'+(x===emo?' class="sel"':'')+'>'+x+'</button>').join("")+'</div>'+
+    '<button class="btn" id="pfsave">'+(p ? "Save" : "Start studying")+'</button>'+
+    '<button class="mcancel" id="pfcancel">Cancel</button>',
+  ()=>{
+    const inp = $("#pfin");
+    inp.focus(); inp.select();
+    $("#emopick").querySelectorAll("button").forEach(b=>{
+      b.onclick = ()=>{
+        emo = b.dataset.e;
+        $("#emopick").querySelectorAll("button").forEach(x=>x.classList.remove("sel"));
+        b.classList.add("sel");
+      };
+    });
+    const commit = ()=>{
+      const n = inp.value.trim();
+      if(!n){ inp.focus(); return; }
+      if(REG.list.some(x=> x.name.toLowerCase()===n.toLowerCase() && x!==p)){
+        toast("That name is already used on this device", "streak", 2400); return;
+      }
+      if(p){
+        p.name = n; p.emoji = emo; saveReg(); closeModal();
+        if(PID === p.id) pfChip();
+        showProfiles();
+      } else {
+        const id = "p" + Date.now().toString(36);
+        REG.list.push({id, name:n, emoji:emo, bg:REG.list.length % PF_BG.length});
+        saveReg(); closeModal();
+        enterProfile(id);
+        toast("Welcome, "+esc(n)+" 🐾", null, 2600);
+      }
+    };
+    $("#pfsave").onclick = commit;
+    inp.addEventListener("keydown", e=>{ if(e.key === "Enter") commit(); });
+    $("#pfcancel").onclick = closeModal;
+  });
+}
+
+function pfDeleteModal(p){
+  const st = pfStats(p.id);
+  openModal(
+    '<h3>Delete '+esc(p.name)+'?</h3>'+
+    '<p>'+(st.fresh ? "This profile hasn’t answered anything yet, so there’s nothing to lose."
+      : st.mastered ? "Their "+st.mastered+" mastered question"+(st.mastered===1?"":"s")+", review schedule, XP and streak on this device will be gone for good."
+      : "Their progress, XP and streak on this device will be gone for good.")+'</p>'+
+    '<button class="btn danger" id="pfdel">Delete profile</button>'+
+    '<button class="mcancel" id="pfkeep">Keep it</button>',
+  ()=>{
+    $("#pfdel").onclick = ()=>{
+      try{ localStorage.removeItem(pkey(p.id)); }catch(e){}
+      REG.list = REG.list.filter(x=>x.id !== p.id);
+      if(REG.last === p.id) REG.last = null;
+      if(PID === p.id){ PID = null; state = blankState(); }
+      saveReg(); closeModal(); showProfiles();
+      toast("Profile deleted", "streak", 2200);
+    };
+    $("#pfkeep").onclick = closeModal;
+  });
+}
+
+/* ============================================================
    SIDEBAR
    ============================================================ */
 function renderNav(){
@@ -1066,10 +1354,11 @@ function renderNav(){
 
 function closeMenu(){ stopExamTimer(); $("#aside").classList.remove("open"); window.scrollTo(0,0); }
 $("#menutoggle").onclick = ()=> $("#aside").classList.toggle("open");
+$("#pfchip").onclick = ()=> showProfiles();
 $("#resetbtn").onclick = ()=>{
-  if(confirm("Reset all quiz scores, mastery stats and progress?")){
-    state = {best:{},seen:{},q:{},scope:{mixed:"__all",drill:"__all",exam:"__all"},
-             xp:{p:0,day:null,streak:0,best:0,hist:[]}}; save();
+  const me = REG.list.find(x=>x.id===PID);
+  if(confirm("Reset all progress for "+(me ? me.name : "this profile")+"?\n\nMastery, review schedule, XP and streak will be cleared. Other profiles are not affected.")){
+    state = blankState(); save();
     current = TOPICS[0].id;
     renderNav(); showTopic(current);
   }
@@ -1643,10 +1932,13 @@ function finishExam(expired){
 }
 
 /* ============================================================
-   BOOT — land on the review queue if anything is due
+   BOOT — resume the last profile, else pick one.
+   enterProfile() then lands on the review queue if anything is due.
    ============================================================ */
-if(duePool().length){ current = "__due"; showDueIntro(); }
-else showTopic(TOPICS[0].id);
+migrateLegacy();
+if(REG.last && REG.list.some(p => p.id === REG.last)) enterProfile(REG.last);
+else if(REG.list.length === 1) enterProfile(REG.list[0].id);
+else showProfiles();
 </script>
 </body>
 </html>
