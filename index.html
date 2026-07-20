@@ -121,6 +121,56 @@
   }
   .resetbtn:hover{border-color:var(--bad);color:var(--bad);}
 
+  /* ================= XP / STREAK ================= */
+  .xpcard{
+    margin:0 0 22px;padding:13px 14px;background:var(--panel2);
+    border:1px solid var(--line);border-radius:var(--radius);
+  }
+  .xprow{display:flex;align-items:center;gap:8px;justify-content:space-between;}
+  .lvl{
+    font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;
+    background:var(--grad);color:var(--acc-ink);border-radius:6px;padding:3px 7px;flex:none;
+  }
+  .rank{
+    font-size:12.5px;font-weight:600;color:var(--text);flex:1;min-width:0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .flame{
+    font-family:var(--mono);font-size:11px;color:var(--muted);flex:none;
+    font-variant-numeric:tabular-nums;
+  }
+  .flame.hot{color:#ffb35c;}
+  .xpbar{height:3px;border-radius:99px;background:rgba(255,255,255,.06);margin:10px 0 7px;overflow:hidden;}
+  .xpbar i{display:block;height:100%;width:0;background:var(--grad);transition:width .5s var(--ease);}
+  .xpfoot{display:flex;align-items:center;gap:8px;justify-content:space-between;}
+  .xpmeta{font-family:var(--mono);font-size:10px;color:var(--faint);font-variant-numeric:tabular-nums;}
+  .dots{display:flex;gap:4px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.08);}
+  .dot.on{background:var(--acc2);}
+  .dot.now{box-shadow:0 0 0 2px rgba(89,227,179,.22);}
+
+  #toasts{
+    position:fixed;right:22px;bottom:22px;z-index:60;
+    display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none;
+  }
+  .toast{
+    background:rgba(22,32,43,.94);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+    border:1px solid var(--line2);border-radius:11px;padding:9px 15px;
+    font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--acc2);
+    box-shadow:0 10px 30px -12px rgba(0,0,0,.8);white-space:nowrap;
+  }
+  .toast.vr{color:#ffd97d;border-color:rgba(255,217,125,.4);}
+  .toast.streak{color:#ffb35c;border-color:rgba(255,179,92,.4);}
+  .toast.up{
+    color:var(--text);border-color:var(--acc);padding:12px 18px;font-size:13px;
+    background:linear-gradient(135deg,rgba(62,203,224,.22),rgba(89,227,179,.14)),rgba(22,32,43,.96);
+  }
+  .toast.up b{display:block;font-family:var(--serif);font-size:17px;font-weight:700;margin-top:2px;letter-spacing:-.01em;}
+  @media (max-width:900px){
+    #toasts{right:12px;left:12px;bottom:12px;align-items:center;}
+    .toast{white-space:normal;text-align:center;}
+  }
+
   /* ================= MAIN ================= */
   main{flex:1;min-width:0;padding:44px 48px 110px;max-width:860px;}
   h1{
@@ -343,12 +393,22 @@
       <div class="ring" id="ring"><span class="num" id="overallNum">—</span></div>
       <div class="omet"><div class="lbl" id="overallLbl">no questions answered yet</div></div>
     </div>
+    <div class="xpcard">
+      <div class="xprow">
+        <span class="lvl" id="xplvl">LVL 1</span>
+        <span class="rank" id="xprank">Novice Handler</span>
+        <span class="flame" id="xpstreak">no streak</span>
+      </div>
+      <div class="xpbar"><i id="xpfill"></i></div>
+      <div class="xpfoot"><span class="xpmeta" id="xpmeta">0 XP</span><span class="dots" id="xpdots"></span></div>
+    </div>
     <nav id="nav"></nav>
     <div class="navsep"></div>
     <button class="resetbtn" id="resetbtn">Reset all progress</button>
   </aside>
   <main id="main"></main>
 </div>
+<div id="toasts"></div>
 
 <script>
 /* ============================================================
@@ -748,6 +808,7 @@ function load(){
   if(!s) s = {best:{},seen:{}};
   if(!s.q) s.q = {};   // per-question stats: {qid:{s:seen, r:right, k:streak}}
   if(!s.scope) s.scope = {mixed:"__all", drill:"__all", exam:"__all"};
+  if(!s.xp) s.xp = {p:0, day:null, streak:0, best:0, hist:[]};   // points, last active day, streaks, day history
   return s;
 }
 function save(){
@@ -848,6 +909,85 @@ function drawMixed(scope){
 }
 
 /* ============================================================
+   XP, RANKS & DAILY STREAK
+   The reward schedule follows the deck's own lesson: reinforcement
+   only, never punishment (a wrong answer costs nothing — excessive
+   punishment is what the Learned Helplessness slide warns about),
+   plus a variable-ratio bonus, the schedule the Ratio Schedules
+   slide says produces the highest rate of responding.
+   ============================================================ */
+const RANKS = ["Novice Handler","Apprentice","Handler","Marker Technician","Shaping Specialist",
+               "Behavior Analyst","Senior Trainer","Master Trainer","Head of Training","Learning Theorist"];
+const XP_CURVE = 80;                                    // xp needed for level n = 80*(n-1)^2
+function xpForLevel(n){ return XP_CURVE*(n-1)*(n-1); }
+function levelOf(p){ return Math.min(RANKS.length, Math.floor(Math.sqrt(p/XP_CURVE))+1); }
+
+function dayKey(d){
+  const t = d || new Date();
+  return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
+}
+function dayShift(n){ const d = new Date(); d.setDate(d.getDate()+n); return dayKey(d); }
+
+// Called on every answer. Returns true the first time it runs on a new day.
+function touchStreak(){
+  const x = state.xp, today = dayKey();
+  if(x.day === today) return false;
+  x.streak = (x.day === dayShift(-1)) ? x.streak+1 : 1;
+  x.day = today;
+  if(x.streak > x.best) x.best = x.streak;
+  x.hist = (x.hist||[]).filter(d=>d!==today).concat(today).slice(-14);
+  return true;
+}
+
+// Quiet mode batches gains so exam mode leaks no right/wrong signal
+// before the results screen, and rapid rounds don't spray toasts.
+let xpQuiet = false, xpBatch = 0;
+function awardXP(n, kind, label){
+  if(n <= 0) return;
+  state.xp.p += n;
+  if(xpQuiet){ xpBatch += n; return; }
+  toast("+"+n+" XP"+(label? " · "+label : ""), kind);
+}
+function checkLevelUp(before){
+  const now = levelOf(state.xp.p);
+  if(now > before) toast("Level "+now+"<b>"+RANKS[now-1]+"</b>", "up", 3200);
+  return now;
+}
+
+function toast(html, kind, ms){
+  const box = $("#toasts");
+  if(!box) return;
+  const el = document.createElement("div");
+  el.className = "toast" + (kind? " "+kind : "");
+  el.innerHTML = html;
+  box.appendChild(el);
+  setTimeout(()=>{ el.style.opacity = "0"; setTimeout(()=>el.remove(), 300); }, ms || 1900);
+  while(box.children.length > 4) box.firstChild.remove();
+}
+
+function renderXP(){
+  const x = state.xp, lv = levelOf(x.p);
+  const base = xpForLevel(lv), next = xpForLevel(lv+1);
+  const capped = lv >= RANKS.length;
+  $("#xplvl").textContent = "LVL "+lv;
+  $("#xprank").textContent = RANKS[lv-1];
+  $("#xpfill").style.width = (capped ? 100 : Math.round(100*(x.p-base)/(next-base)))+"%";
+  $("#xpmeta").textContent = capped ? x.p+" XP · max rank" : (x.p-base)+" / "+(next-base)+" XP to LVL "+(lv+1);
+
+  const live = x.day === dayKey() || x.day === dayShift(-1);
+  const fl = $("#xpstreak");
+  fl.textContent = (x.streak && live) ? "🔥 "+x.streak+"d" : (x.best? "best "+x.best+"d" : "no streak");
+  fl.className = "flame" + ((x.streak>1 && live) ? " hot" : "");
+  fl.title = x.best ? "Longest streak: "+x.best+" days" : "";
+
+  const hist = new Set(x.hist||[]);
+  $("#xpdots").innerHTML = [6,5,4,3,2,1,0].map(n=>{
+    const d = dayShift(-n);
+    return '<span class="dot'+(hist.has(d)?" on":"")+(n===0?" now":"")+'" title="'+d+'"></span>';
+  }).join("");
+}
+
+/* ============================================================
    SIDEBAR
    ============================================================ */
 function renderNav(){
@@ -914,20 +1054,22 @@ function renderNav(){
   nav.appendChild(mx);
 
   const oc = weakCounts();
-  const touched = oc.m + oc.weak > 0;
+  const touched = Object.keys(state.q).length > 0;   // any answered question, incl. first-time-right
   const opct = Math.round(100*oc.m/TOTAL_Q);
   $("#overallNum").textContent = touched ? opct+"%" : "—";
   $("#ring").style.setProperty("--p", touched ? opct : 0);
   $("#overallLbl").textContent = touched
     ? oc.m+" of "+TOTAL_Q+" mastered (2 right in a row)"
     : "no questions answered yet";
+  renderXP();
 }
 
 function closeMenu(){ stopExamTimer(); $("#aside").classList.remove("open"); window.scrollTo(0,0); }
 $("#menutoggle").onclick = ()=> $("#aside").classList.toggle("open");
 $("#resetbtn").onclick = ()=>{
   if(confirm("Reset all quiz scores, mastery stats and progress?")){
-    state = {best:{},seen:{},q:{},scope:{mixed:"__all",drill:"__all",exam:"__all"}}; save();
+    state = {best:{},seen:{},q:{},scope:{mixed:"__all",drill:"__all",exam:"__all"},
+             xp:{p:0,day:null,streak:0,best:0,hist:[]}}; save();
     current = TOPICS[0].id;
     renderNav(); showTopic(current);
   }
@@ -1067,7 +1209,8 @@ function showConfusables(){
 
 let rapid = null;
 function startRapid(){
-  rapid = {items: shuffle(RAPID), i:0, right:0, misses:{}, t0: Date.now()};
+  rapid = {items: shuffle(RAPID), i:0, right:0, misses:{}, t0: Date.now(), lv0: levelOf(state.xp.p)};
+  xpQuiet = true; xpBatch = 0;          // batch gains; one summary toast at the end
   renderRapid();
   window.scrollTo(0,0);
 }
@@ -1087,7 +1230,8 @@ function renderRapid(){
   main.querySelectorAll(".opt").forEach(b=>{
     b.onclick = ()=>{
       const ok = b.dataset.s === it.side;
-      if(ok) rapid.right++; else rapid.misses[it.cid] = (rapid.misses[it.cid]||0)+1;
+      if(ok){ rapid.right++; touchStreak(); awardXP(5); renderXP(); }
+      else rapid.misses[it.cid] = (rapid.misses[it.cid]||0)+1;
       main.querySelectorAll(".opt").forEach(x=>{
         x.disabled = true;
         if(x.dataset.s===it.side) x.classList.add("correct");
@@ -1100,6 +1244,10 @@ function renderRapid(){
 function rapidResult(){
   const ms = Date.now() - rapid.t0;
   const total = rapid.items.length;
+  xpQuiet = false;
+  if(xpBatch > 0){ toast("+"+xpBatch+" XP · rapid round", null, 2600); xpBatch = 0; }
+  checkLevelUp(rapid.lv0);
+  save();
   const prev = state.rapid;
   if(!prev || rapid.right > prev.score || (rapid.right === prev.score && ms < prev.ms)){
     state.rapid = {score: rapid.right, total: total, ms: ms}; save();
@@ -1205,6 +1353,9 @@ function checkFib(){
 function recordAnswer(ok, q){
   if(!q.qid) return null;
   const stq = state.q[q.qid] || (state.q[q.qid] = {s:0,r:0,k:0});
+  const preK = stq.k, wasDue = !!(stq.due && stq.due <= Date.now());
+  const lv0 = levelOf(state.xp.p);
+
   stq.s++;
   if(ok){
     stq.r++; stq.k++;
@@ -1213,7 +1364,22 @@ function recordAnswer(ok, q){
   } else {
     stq.k = 0; delete stq.due; delete stq.iv;
   }
+
+  // --- reinforcement ---
+  if(touchStreak() && state.xp.streak > 1 && !xpQuiet)
+    toast("🔥 "+state.xp.streak+"-day streak", "streak", 2600);
+  if(ok){
+    const grinding = preK >= 2 && !wasDue;                 // re-answering something already known
+    if(grinding)      awardXP(2,  null, "already mastered");
+    else if(wasDue)   awardXP(15, null, "review held");
+    else              awardXP(10);
+    if(stq.k === 2)   awardXP(25, null, "mastered");
+    if(!grinding && Math.random() < 0.2) awardXP(25, "vr", "variable-ratio bonus");
+  }
+  if(!xpQuiet) checkLevelUp(lv0);
+
   save();
+  renderXP();          // keep the sidebar card live between questions, not just on view changes
   return stq;
 }
 
@@ -1357,7 +1523,9 @@ function startExam(scope){
   stopExamTimer();
   scope = scope || "__all";
   const pool = examPool(scope);
-  exam = {qs: pool, i:0, answers:[], scope: scope, t0: Date.now(), end: Date.now()+examDuration(pool.length, scope)};
+  exam = {qs: pool, i:0, answers:[], scope: scope, lv0: levelOf(state.xp.p),
+          t0: Date.now(), end: Date.now()+examDuration(pool.length, scope)};
+  xpQuiet = true; xpBatch = 0;          // no XP toasts mid-exam — they would leak right/wrong
   examTick = setInterval(()=>{
     const el = $("#examclock");
     if(!el) return;                       // view changed; closeMenu clears us too
@@ -1430,6 +1598,10 @@ function finishExam(expired){
   stopExamTimer();
   const unanswered = exam.qs.slice(exam.answers.length);
   unanswered.forEach(q=>{ recordAnswer(false, q); exam.answers.push({q:q, ok:false, given:null}); });
+  xpQuiet = false;
+  const earned = xpBatch; xpBatch = 0;
+  if(earned > 0) toast("+"+earned+" XP · exam", null, 3000);
+  checkLevelUp(exam.lv0);
 
   const total = exam.qs.length;
   const c = exam.answers.filter(a=>a.ok).length;
