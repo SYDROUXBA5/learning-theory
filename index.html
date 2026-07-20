@@ -1,0 +1,1281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Learning Theory — Study & Quiz</title>
+<style>
+  :root{
+    --bg:#0b0f14;
+    --panel:#131a22;
+    --panel2:#1a232d;
+    --line:#26313f;
+    --text:#e7eef6;
+    --muted:#93a4b8;
+    --accent:#3fb6c8;
+    --accent-dim:#1e4d57;
+    --good:#3fb950;
+    --good-dim:#123d1d;
+    --bad:#f0575f;
+    --bad-dim:#45191d;
+    --radius:14px;
+    --sidebar:288px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    -webkit-text-size-adjust:100%;
+  }
+  .app{display:flex;min-height:100vh;}
+
+  /* ---------- sidebar ---------- */
+  aside{
+    width:var(--sidebar);flex:0 0 var(--sidebar);
+    background:var(--panel);border-right:1px solid var(--line);
+    padding:22px 16px 40px;
+    position:sticky;top:0;height:100vh;overflow-y:auto;
+  }
+  .brand{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700;}
+  .brand small{display:block;letter-spacing:0;text-transform:none;color:var(--muted);font-weight:400;font-size:12px;margin-top:4px;}
+  .overall{margin:18px 0 20px;padding:12px 14px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;}
+  .overall .num{font-size:24px;font-weight:700;}
+  .overall .lbl{font-size:12px;color:var(--muted);}
+  nav{display:flex;flex-direction:column;gap:4px;}
+  .navbtn{
+    display:block;width:100%;text-align:left;cursor:pointer;
+    background:transparent;border:1px solid transparent;color:var(--text);
+    border-radius:10px;padding:10px 12px;font:inherit;font-size:14px;line-height:1.35;
+    transition:background .12s,border-color .12s;
+  }
+  .navbtn:hover{background:var(--panel2);}
+  .navbtn.active{background:var(--accent-dim);border-color:var(--accent);}
+  .navbtn .row{display:flex;align-items:baseline;gap:8px;justify-content:space-between;}
+  .navbtn .t{font-weight:600;}
+  .navbtn .sc{font-size:11px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .navbtn.active .sc{color:#cfeef4;}
+  .bar{height:4px;border-radius:99px;background:#0c1219;margin-top:8px;overflow:hidden;}
+  .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s;}
+  .bar i.full{background:var(--good);}
+  .navsep{height:1px;background:var(--line);margin:14px 2px;}
+  .resetbtn{margin-top:22px;width:100%;background:transparent;border:1px solid var(--line);color:var(--muted);
+    border-radius:9px;padding:9px;font:inherit;font-size:12px;cursor:pointer;}
+  .resetbtn:hover{border-color:var(--bad);color:var(--bad);}
+
+  /* ---------- main ---------- */
+  main{flex:1;min-width:0;padding:36px 40px 96px;max-width:920px;}
+  h1{font-size:30px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em;}
+  .kicker{color:var(--accent);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;margin-bottom:10px;}
+  .summary{color:#cdd9e6;font-size:17px;margin:0 0 26px;}
+  h2{font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:32px 0 12px;font-weight:700;}
+  ul.points{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;}
+  ul.points li{
+    background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:10px;padding:12px 15px;
+  }
+  .verbatim{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0;}
+  .verbatim .vt{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:8px;}
+  .verbatim pre{margin:0;white-space:pre-wrap;font:inherit;color:#dbe6f0;}
+  .srcs{font-size:12px;color:var(--muted);margin-top:26px;padding-top:14px;border-top:1px solid var(--line);}
+
+  .btn{
+    display:inline-block;cursor:pointer;font:inherit;font-weight:600;
+    background:var(--accent);color:#04222a;border:none;border-radius:10px;padding:13px 22px;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line);}
+  .btn.ghost:hover{border-color:var(--accent);color:var(--accent);}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px;}
+
+  /* ---------- quiz ---------- */
+  .qhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+  .qcount{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .qbar{height:5px;background:var(--panel2);border-radius:99px;overflow:hidden;margin-bottom:28px;}
+  .qbar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s;}
+  .qtype{display:inline-block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);
+    border:1px solid var(--accent-dim);background:#0e2a31;border-radius:99px;padding:3px 10px;margin-bottom:12px;font-weight:700;}
+  .qtext{font-size:21px;line-height:1.45;margin:0 0 22px;font-weight:600;}
+  .opts{display:flex;flex-direction:column;gap:9px;}
+  .opt{
+    text-align:left;cursor:pointer;font:inherit;color:var(--text);
+    background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:14px 16px;
+    display:flex;gap:12px;align-items:flex-start;transition:border-color .12s,background .12s;
+  }
+  .opt:hover:not(:disabled){border-color:var(--accent);}
+  .opt:disabled{cursor:default;}
+  .opt .key{
+    flex:0 0 24px;height:24px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted);
+  }
+  .opt.correct{background:var(--good-dim);border-color:var(--good);}
+  .opt.correct .key{background:var(--good);border-color:var(--good);color:#04220c;}
+  .opt.wrong{background:var(--bad-dim);border-color:var(--bad);}
+  .opt.wrong .key{background:var(--bad);border-color:var(--bad);color:#2a0508;}
+  .fib{display:flex;gap:10px;flex-wrap:wrap;}
+  .fib input{
+    flex:1;min-width:200px;font:inherit;font-size:17px;color:var(--text);
+    background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:14px 16px;
+  }
+  .fib input:focus{outline:none;border-color:var(--accent);}
+  .fib input:disabled{opacity:.75;}
+  .blank{color:var(--accent);letter-spacing:.06em;}
+  .fb{margin-top:18px;border-radius:12px;padding:15px 17px;border:1px solid var(--line);background:var(--panel);}
+  .fb.ok{border-color:var(--good);background:var(--good-dim);}
+  .fb.no{border-color:var(--bad);background:var(--bad-dim);}
+  .fb .verdict{font-weight:700;margin-bottom:6px;}
+  .fb .why{color:#dbe6f0;}
+  .fb .src{font-size:12px;color:var(--muted);margin-top:9px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+
+  .result{text-align:center;padding:40px 20px;}
+  .result .score{font-size:64px;font-weight:800;line-height:1;letter-spacing:-.03em;}
+  .result .pct{color:var(--accent);font-size:18px;margin-top:8px;}
+  .result .msg{color:var(--muted);margin-top:14px;}
+  .result .btnrow{justify-content:center;}
+
+  .note{font-size:13px;color:var(--muted);background:var(--panel);border:1px solid var(--line);
+    border-left:3px solid var(--muted);border-radius:10px;padding:11px 14px;margin-top:18px;}
+
+  .menutoggle{display:none;}
+
+  @media (max-width:900px){
+    .app{flex-direction:column;}
+    aside{
+      width:100%;flex:none;height:auto;position:static;border-right:none;border-bottom:1px solid var(--line);
+      padding:16px 16px 18px;
+    }
+    aside nav,aside .overall,aside .resetbtn,aside .navsep{display:none;}
+    aside.open nav,aside.open .overall,aside.open .resetbtn,aside.open .navsep{display:block;}
+    aside.open nav{display:flex;}
+    .menutoggle{
+      display:block;margin-top:12px;width:100%;background:var(--panel2);border:1px solid var(--line);
+      color:var(--text);border-radius:10px;padding:11px;font:inherit;font-weight:600;cursor:pointer;
+    }
+    main{padding:24px 18px 80px;max-width:none;}
+    h1{font-size:25px;}
+    .qtext{font-size:19px;}
+    .result .score{font-size:52px;}
+  }
+  /* ---------- confusables ---------- */
+  .cmp{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin:14px 0;}
+  .cmphead{font-weight:700;margin-bottom:10px;}
+  .cmpgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .cmpcol{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;}
+  .cmpname{font-weight:700;color:var(--accent);font-size:14px;margin-bottom:6px;}
+  .cmpline{font-size:14px;border-left:2px solid var(--line);padding-left:8px;margin:6px 0;font-style:italic;}
+  .cmptip{margin-top:10px;font-size:13px;color:var(--muted);}
+  @media (max-width:640px){ .cmpgrid{grid-template-columns:1fr;} }
+
+  /* ---------- exam ---------- */
+  .examtimer{position:sticky;top:0;z-index:5;background:var(--panel2);border:1px solid var(--line);
+    border-radius:10px;padding:8px 14px;display:flex;justify-content:space-between;gap:10px;
+    font-variant-numeric:tabular-nums;margin-bottom:14px;font-size:14px;}
+  .examtimer.low{border-color:var(--bad);color:var(--bad);}
+  .rev{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;}
+  .rev .rq{font-weight:600;}
+  .rev .ra{font-size:14px;margin-top:6px;}
+  .rev .ra.bad{color:var(--bad);}
+  .rev .ra.good{color:var(--good);}
+  .rev .why{font-size:13px;color:var(--muted);margin-top:6px;}
+  .rev .src{font-size:12px;color:var(--muted);margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside id="aside">
+    <div class="brand">Learning Theory<small>Dog training · slide deck study set</small></div>
+    <button class="menutoggle" id="menutoggle">☰ Topics</button>
+    <div class="overall">
+      <div class="num" id="overallNum">0%</div>
+      <div class="lbl" id="overallLbl">overall best score</div>
+    </div>
+    <nav id="nav"></nav>
+    <div class="navsep"></div>
+    <button class="resetbtn" id="resetbtn">Reset all progress</button>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<script>
+/* ============================================================
+   DATA — every point and every question comes verbatim from the
+   25 slide photos in this folder. Nothing invented.
+   ============================================================ */
+const TOPICS = [
+{
+  id:"foundations",
+  title:"Foundations & Classical Conditioning",
+  sources:["IMG_3617 2.HEIC","IMG_3618 2.HEIC"],
+  summary:"The deck opens by listing everything an effective dog trainer needs to understand, from learning theory through to timing and pacing. It then introduces the first of the two great conditioning models: classical conditioning, discovered by Ivan Pavlov, in which learning happens through association rather than through consequences.",
+  points:[
+    "Effective dog trainers understand how dogs learn, learning theory, dogs' capabilities and limitations, successive approximations, nature vs. nurture, classical and operant conditioning, and timing and pacing.",
+    "Under \"Learning theory\" the deck lists two sub-topics: Punishment vs. Reinforcement, and Motivation.",
+    "Classical conditioning is often also referred to as Pavlovian conditioning.",
+    "Classical conditioning is a type of learning through association.",
+    "Classical conditioning was discovered by Ivan Pavlov, a Russian physiologist.",
+    "Classical conditioning is also called respondent conditioning.",
+    "In respondent conditioning, two stimuli are linked together to produce a new learned response in a person or animal."
+  ],
+  verbatim:[
+    {t:"Effective dog trainers understand:",body:"How Dogs Learn\nLearning theory\n    Punishment vs. Reinforcement\n    Motivation\nDogs' capabilities and limitations\nSuccessive Approximations\nNature vs. Nurture\nClassical and Operant Conditioning\nTiming and Pacing"},
+    {t:"Pavlov, quoted on the slide",body:"“Appetite, craving for food, is a constant and powerful stimulator of the gastric glands.”  — Ivan Pavlov"}
+  ],
+  questions:[
+    {type:"mc",q:"Which of these appears on the “Effective dog trainers understand” list?",opts:["Nature vs. Nurture","Breed standards","Kennel design","Canine nutrition science"],a:0,src:"IMG_3617 2.HEIC",why:"The list reads: How Dogs Learn, Learning theory, Dogs' capabilities and limitations, Successive Approximations, Nature vs. Nurture, Classical and Operant Conditioning, Timing and Pacing."},
+    {type:"mc",q:"Under “Learning theory”, which two sub-topics are indented on the slide?",opts:["Punishment vs. Reinforcement, and Motivation","Timing, and Pacing","Nature, and Nurture","Classical, and Operant"],a:0,src:"IMG_3617 2.HEIC",why:"The two indented items under Learning theory are “Punishment vs. Reinforcement” and “Motivation”."},
+    {type:"fib",q:"Classical conditioning is often also referred to as <span class='blank'>__________</span> conditioning.",acc:["pavlovian","pavlov","pavlovian conditioning"],src:"IMG_3618 2.HEIC",why:"“Classical conditioning is often also referred to as Pavlovian conditioning.”"},
+    {type:"mc",q:"Who discovered classical conditioning?",opts:["Ivan Pavlov","B.F. Skinner","Karen Pryor","Konrad Lorenz"],a:0,src:"IMG_3618 2.HEIC",why:"The slide credits the discovery to Ivan Pavlov, a Russian physiologist."},
+    {type:"tf",q:"Ivan Pavlov was a Russian physiologist.",a:true,src:"IMG_3618 2.HEIC",why:"The slide describes Pavlov as “a Russian physiologist.”"},
+    {type:"fib",q:"Besides “Pavlovian”, classical conditioning is also called <span class='blank'>__________</span> conditioning.",acc:["respondent","respondent conditioning"],src:"IMG_3618 2.HEIC",why:"“Also called respondent conditioning: two stimuli are linked together to produce a new learned response.”"},
+    {type:"mc",q:"Classical conditioning is a type of learning through what?",opts:["Association","Consequences","Punishment","Imitation"],a:0,src:"IMG_3618 2.HEIC",why:"“It is a type of learning through association.” Consequences are the mechanism of operant conditioning, not classical."},
+    {type:"mc",q:"In respondent conditioning, what gets linked together?",opts:["Two stimuli","A behavior and its consequence","Two behaviors","A stimulus and a punishment"],a:0,src:"IMG_3618 2.HEIC",why:"“Two stimuli are linked together to produce a new learned response in a person or animal.”"},
+    {type:"tf",q:"“Timing and Pacing” is one of the items an effective dog trainer must understand.",a:true,src:"IMG_3617 2.HEIC",why:"“Timing and Pacing” is the final item on the list."},
+    {type:"fib",q:"Complete Pavlov's quote: “Appetite, craving for food, is a constant and powerful stimulator of the <span class='blank'>__________</span> glands.”",acc:["gastric"],src:"IMG_3618 2.HEIC",why:"The quote on the slide ends “…stimulator of the gastric glands.”"},
+    {type:"mc",q:"Which item is on the trainer-understanding list?",opts:["Successive Approximations","Clicker brands","Agility course design","Leash laws"],a:0,src:"IMG_3617 2.HEIC",why:"“Successive Approximations” sits between “Dogs' capabilities and limitations” and “Nature vs. Nurture”."}
+  ]
+},
+{
+  id:"operant",
+  title:"Operant Conditioning & the Four Quadrants",
+  sources:["IMG_3619 2.HEIC","IMG_3635 2.HEIC","IMG_3636 2.HEIC","IMG_3637 2.HEIC","IMG_3638 2.HEIC"],
+  summary:"Operant conditioning is the second model: behaviour modified by its consequences, as formulated by B.F. Skinner. The deck breaks it into a four-quadrant diagram built from two axes — reinforcement vs. punishment (does behaviour increase or decrease?) and positive vs. negative (is a stimulus added or removed?) — with negative reinforcement splitting further into escape and avoidance. It closes with a caution not to equate any quadrant with any particular training tool.",
+  points:[
+    "Operant conditioning is a type of learning in which behavior is modified by consequences; association is made between a behavior and its consequence.",
+    "Operant conditioning is also called instrumental conditioning; learning occurs through rewards and punishments for behavior.",
+    "Reinforcements are any event that strengthens or increases the behavior it follows.",
+    "Punishments are the presentation of an adverse event or outcome that decreases in the behavior it follows.",
+    "In the diagram, Reinforcement increases behavior and Punishment decreases behavior; Positive means adding a stimulus and Negative means removing one.",
+    "Negative reinforcement splits into Escape (remove undesirable stimuli following correct behavior) and Avoidance (correct behavior avoids undesirable stimuli).",
+    "Negative punishment is the removal of desirable stimuli — labelled “penalty” in the diagram.",
+    "The deck cautions: do NOT make associations between quadrants of Operant Conditioning and certain training tools or devices."
+  ],
+  verbatim:[
+    {t:"Terminology (verbatim)",body:"+ Positive:  Addition or Presence of stimulus\n– Negative:  Removal or Absence of stimulus\nR Reinforcement:  Increases behavior\nP Punishment:  Decreases behavior\nEscape:  Removes a stimulus\nAvoidance:  Prevents a stimulus"},
+    {t:"Operant Conditioning diagram",body:"Operant Conditioning\n├─ Reinforcement — Increase Behavior\n│   ├─ Positive — Add desirable stimuli\n│   └─ Negative\n│        ├─ Escape — Remove undesirable stimuli following correct behavior\n│        └─ Avoidance — Correct behavior avoids undesirable stimuli\n└─ Punishment — Decrease Behavior\n     ├─ Positive — Add undesirable stimuli\n     └─ Negative — Remove desirable stimuli (penalty)"},
+    {t:"Skinner, quoted on the slide",body:"“The consequences of behavior determine the probability that the behavior will occur again”  — B.F. Skinner"}
+  ],
+  questions:[
+    {type:"mc",q:"Who is quoted on the Operant Conditioning slide?",opts:["B.F. Skinner","Ivan Pavlov","Karen Pryor","Konrad Lorenz"],a:0,src:"IMG_3619 2.HEIC",why:"“The consequences of behavior determine the probability that the behavior will occur again” — B.F. Skinner."},
+    {type:"fib",q:"Operant conditioning is also called <span class='blank'>__________</span> conditioning.",acc:["instrumental","instrumental conditioning"],src:"IMG_3619 2.HEIC",why:"“Also called instrumental conditioning; learning occurs through rewards and punishments for behavior.”"},
+    {type:"mc",q:"In operant conditioning, the association is made between…",opts:["A behavior and its consequence","Two stimuli","Two behaviors","A stimulus and a reflex"],a:0,src:"IMG_3619 2.HEIC",why:"“Association is made between a behavior and its consequence.” Linking two stimuli is classical conditioning."},
+    {type:"mc",q:"How does the deck define reinforcements?",opts:["Any event that strengthens or increases the behavior it follows","The presentation of an adverse event that decreases behavior","Any consequence delivered after a delay","Any event the trainer finds pleasant"],a:0,src:"IMG_3635 2.HEIC",why:"Reinforcements: “Any event that strengthens or increases the behavior it follows.”"},
+    {type:"fib",q:"In the terminology slide, “+ Positive” means the <span class='blank'>__________</span> or presence of a stimulus.",acc:["addition","adding","add"],src:"IMG_3638 2.HEIC",why:"“+ Positive: Addition or Presence of stimulus.”"},
+    {type:"fib",q:"“– Negative” means the removal or <span class='blank'>__________</span> of stimulus.",acc:["absence"],src:"IMG_3638 2.HEIC",why:"“– Negative: Removal or Absence of stimulus.”"},
+    {type:"mc",q:"In the diagram, “Positive” under Reinforcement is defined as…",opts:["Add desirable stimuli","Add undesirable stimuli","Remove desirable stimuli","Remove undesirable stimuli"],a:0,src:"IMG_3636 2.HEIC",why:"Reinforcement → Positive → “Add desirable stimuli.”"},
+    {type:"mc",q:"In the diagram, “Negative” under Punishment is defined as…",opts:["Remove desirable stimuli (penalty)","Add undesirable stimuli","Add desirable stimuli","Remove undesirable stimuli"],a:0,src:"IMG_3636 2.HEIC",why:"Punishment → Negative → “Remove desirable stimuli (penalty).”"},
+    {type:"mc",q:"In the diagram, negative reinforcement branches into which two sub-types?",opts:["Escape and Avoidance","Positive and Negative","Fixed and Variable","Primary and Secondary"],a:0,src:"IMG_3636 2.HEIC",why:"The “Negative” box under Reinforcement is the only one that branches further — into Escape and Avoidance."},
+    {type:"mc",q:"How is Escape defined in the diagram?",opts:["Remove undesirable stimuli following correct behavior","Correct behavior avoids undesirable stimuli","Add desirable stimuli","Remove desirable stimuli"],a:0,src:"IMG_3636 2.HEIC",why:"Escape: “Remove undesirable stimuli following correct behavior.” Avoidance is the one where correct behavior avoids the stimulus."},
+    {type:"fib",q:"Terminology slide: “Avoidance: <span class='blank'>__________</span> a stimulus.”",acc:["prevents","prevent"],src:"IMG_3638 2.HEIC",why:"“Escape: Removes a stimulus. Avoidance: Prevents a stimulus.”"},
+    {type:"tf",q:"The deck warns against making associations between the quadrants of operant conditioning and certain training tools or devices.",a:true,src:"IMG_3637 2.HEIC",why:"“A QUICK CAUTION — Do NOT make associations between quadrants of Operant Conditioning and certain training tools or devices.”"}
+  ]
+},
+{
+  id:"reinforcers",
+  title:"Reinforcers — Primary, Secondary & the Rules",
+  sources:["IMG_3623 2.HEIC","IMG_3639 2.HEIC","IMG_3640 2.HEIC"],
+  summary:"Reinforcers divide two ways. First by origin: primary (unconditioned) reinforcers are things the dog believes it cannot live without, while secondary (conditioned) reinforcers work through a developed association. Second by direction: positive reinforcers add something pleasant after a behavior, negative reinforcers remove something unpleasant — and either way the reward must be valuable to the dog and delivered on time.",
+  points:[
+    "Primary reinforcers are unconditioned — things the dog believes it cannot live without: Food, Water, Social interaction, Play, Sex, Sleep, Freedom.",
+    "Secondary reinforcers are a developed association (conditioned): Praise, Toys, Clicker.",
+    "Positive reinforcers are favorable events or outcomes presented after behavior; the behavior is strengthened by the addition of something considered pleasant.",
+    "Negative reinforcers are the removal of unfavorable events or outcomes after behavior; the response is strengthened by the removal of something considered unpleasant.",
+    "Positive reinforcement must be rewarding to the dog — food and toys are the examples given.",
+    "Trainers must beware of self-rewarding reinforcements in the environment.",
+    "Reinforcement must be timely and attached to the behavior you want; use of secondary reinforcers extends the time available."
+  ],
+  verbatim:[
+    {t:"Primary vs. Secondary Reinforcers (verbatim)",body:"PRIMARY REINFORCERS               SECONDARY REINFORCERS\n[Dog believes] it cannot          Developed association\nlive without (unconditioned)      (conditioned)\n\n    Food                              Praise\n    Water                             Toys\n    Social interaction                Clicker\n    Play\n    Sex\n    Sleep\n    Freedom"}
+  ],
+  questions:[
+    {type:"mc",q:"Which of these is listed as a PRIMARY reinforcer?",opts:["Freedom","Praise","Clicker","Toys"],a:0,src:"IMG_3623 2.HEIC",why:"The primary column lists Food, Water, Social interaction, Play, Sex, Sleep, Freedom. Praise, Toys and Clicker are all in the secondary column."},
+    {type:"mc",q:"Which of these is listed as a SECONDARY reinforcer?",opts:["Praise","Water","Sleep","Sex"],a:0,src:"IMG_3623 2.HEIC",why:"The secondary column contains exactly three items: Praise, Toys, Clicker."},
+    {type:"fib",q:"Primary reinforcers are described on the slide with the parenthetical term <span class='blank'>__________</span>.",acc:["unconditioned"],src:"IMG_3623 2.HEIC",why:"“[Dog believes] it cannot live without (unconditioned).”"},
+    {type:"fib",q:"Secondary reinforcers are a developed association, described as <span class='blank'>__________</span>.",acc:["conditioned"],src:"IMG_3623 2.HEIC",why:"“Developed association (conditioned).”"},
+    {type:"mc",q:"The three secondary reinforcers listed are…",opts:["Praise, Toys, Clicker","Food, Water, Play","Praise, Food, Freedom","Toys, Sleep, Clicker"],a:0,src:"IMG_3623 2.HEIC",why:"Only Praise, Toys and Clicker appear in the secondary column."},
+    {type:"tf",q:"“Social interaction” is listed as a primary reinforcer.",a:true,src:"IMG_3623 2.HEIC",why:"It is the third item in the primary column, after Food and Water."},
+    {type:"mc",q:"Positive reinforcers are defined as…",opts:["Favorable events or outcomes presented after behavior","Removal of unfavorable events after behavior","Any event that decreases behavior","Anything the trainer enjoys giving"],a:0,src:"IMG_3639 2.HEIC",why:"“Positive Reinforcers: favorable events or outcomes presented after behavior.”"},
+    {type:"mc",q:"With negative reinforcers, the response is strengthened by the removal of something considered…",opts:["Unpleasant","Pleasant","Neutral","Novel"],a:0,src:"IMG_3639 2.HEIC",why:"“Response is strengthened by the removal of something considered unpleasant.”"},
+    {type:"mc",q:"Positive reinforcement must be rewarding to whom?",opts:["The dog","The trainer","The owner","The class"],a:0,src:"IMG_3640 2.HEIC",why:"The slide italicises it: “Must be rewarding to the dog.”"},
+    {type:"tf",q:"The deck warns to beware of self-rewarding reinforcements in the environment.",a:true,src:"IMG_3640 2.HEIC",why:"It is a bolded bullet on the Positive Reinforcement slide."},
+    {type:"fib",q:"Reinforcement must be timely — use of <span class='blank'>__________</span> reinforcers extends time.",acc:["secondary"],src:"IMG_3640 2.HEIC",why:"“Use of secondary reinforcers extends time.”"},
+    {type:"mc",q:"Which two examples of positive reinforcement does the slide give?",opts:["Food and Toys","Praise and Clicker","Freedom and Sleep","Water and Play"],a:0,src:"IMG_3640 2.HEIC",why:"Under “Must be rewarding to the dog” the slide lists only Food and Toys."}
+  ]
+},
+{
+  id:"punishment",
+  title:"Punishment & Learned Helplessness",
+  sources:["IMG_3661.HEIC","IMG_3662.HEIC","IMG_3664.HEIC"],
+  summary:"Punishment also splits positive (presenting something unfavorable) and negative (removing something favorable). The deck sets three hard conditions on any punishment — appropriate, timely, consistent — and names secondary punishments such as a warning beep or a verbal marker. It ends on the cost of getting this wrong: excessive punishment can produce learned helplessness.",
+  points:[
+    "Positive punishment is the presentation of an unfavorable event or outcome in order to weaken the response it follows.",
+    "Negative punishment occurs when a favorable event or outcome is removed after a behavior occurs.",
+    "Punishment must be appropriate: the minimum punishment required to create the desired change in behavior.",
+    "Punishment must be timely — attached to the misbehavior; delayed punishment is ineffective.",
+    "Punishment must be consistent: if you can't do it every time, best not do it at all; and beware of self-rewarding behaviors.",
+    "Secondary punishments include a warning tone or beep, and the verbal “Uh uh” or “No”.",
+    "Learned helplessness is when the dog believes it has no control over its environment — summarised as “No matter what I do, I'm wrong” and as resignation.",
+    "Learned helplessness is frequently brought about by use of excessive punishment and may lead to escape, avoidance, aggression, or other negative responses."
+  ],
+  verbatim:[
+    {t:"Punishments — the three conditions (verbatim)",body:"Must be appropriate\n    Minimum punishment required to create desired change in behavior\n\nMust be timely\n    Attached to the misbehavior\n    Delayed punishment is ineffective\n\nMust be consistent\n    If you can't do it every time; best not do it at all\n    Beware of self-rewarding behaviors\n\nSecondary Punishments\n    Warning tone; beep\n    Verbal “Uh uh” or “No”"}
+  ],
+  questions:[
+    {type:"mc",q:"Positive punishment is…",opts:["The presentation of an unfavorable event or outcome in order to weaken the response it follows","The removal of a favorable event after a behavior occurs","Any punishment delivered with a tool","Any consequence that increases behavior"],a:0,src:"IMG_3661.HEIC",why:"That is the slide's wording for Positive Punishment; removing something favorable is Negative Punishment."},
+    {type:"mc",q:"Negative punishment occurs when…",opts:["A favorable event or outcome is removed after a behavior occurs","An unfavorable event is presented after a behavior","A reward is delayed","A behavior is ignored"],a:0,src:"IMG_3661.HEIC",why:"“Negative Punishment: occurs when a favorable event or outcome is removed after a behavior occurs.”"},
+    {type:"fib",q:"Punishment must be appropriate — the <span class='blank'>__________</span> punishment required to create the desired change in behavior.",acc:["minimum","minimal"],src:"IMG_3662.HEIC",why:"“Must be appropriate — Minimum punishment required to create desired change in behavior.”"},
+    {type:"tf",q:"Delayed punishment is ineffective.",a:true,src:"IMG_3662.HEIC",why:"Listed under “Must be timely”: “Attached to the misbehavior / Delayed punishment is ineffective.”"},
+    {type:"mc",q:"What is the deck's rule on consistency of punishment?",opts:["If you can't do it every time; best not do it at all","Apply it whenever it is convenient","Apply it only in training sessions","Vary it to keep the dog guessing"],a:0,src:"IMG_3662.HEIC",why:"“Must be consistent — If you can't do it every time; best not do it at all.”"},
+    {type:"mc",q:"Which are listed as secondary punishments?",opts:["Warning tone or beep, and verbal “Uh uh” or “No”","Leash correction and collar","Time-out and crating","Withholding dinner"],a:0,src:"IMG_3662.HEIC",why:"The slide's Secondary Punishments are “Warning tone; beep” and “Verbal ‘Uh uh’ or ‘No’.”"},
+    {type:"fib",q:"Learned helplessness: the dog believes it has no <span class='blank'>__________</span> over its environment.",acc:["control"],src:"IMG_3664.HEIC",why:"“Dog believes it has no control over its environment.”"},
+    {type:"fib",q:"The learned-helplessness slide states the dog's mindset as: “No matter what I do, I'm <span class='blank'>__________</span>.”",acc:["wrong"],src:"IMG_3664.HEIC",why:"The italicised quote on the slide is “No matter what I do, I'm wrong.”"},
+    {type:"mc",q:"Learned helplessness is frequently brought about by…",opts:["Use of excessive punishment","Lack of food","Too much play","Genetics alone"],a:0,src:"IMG_3664.HEIC",why:"“Frequently brought about by use of excessive punishment.”"},
+    {type:"mc",q:"Learned helplessness may lead to which of these?",opts:["Escape, avoidance, aggression, or other negative responses","Faster learning","Improved recall","Higher food drive"],a:0,src:"IMG_3664.HEIC",why:"The final bullet: “May lead to escape, avoidance, aggression, or other negative responses.”"},
+    {type:"tf",q:"The deck gives “Resignation” as a one-word description of learned helplessness.",a:true,src:"IMG_3664.HEIC",why:"“Resignation” stands alone as its own line on the slide."},
+    {type:"tf",q:"To be timely, punishment must be attached to the misbehavior.",a:true,src:"IMG_3662.HEIC",why:"“Must be timely — Attached to the misbehavior.”"}
+  ]
+},
+{
+  id:"schedules",
+  title:"Schedules of Reinforcement",
+  sources:["IMG_3658.HEIC","IMG_3659.HEIC","IMG_3660.HEIC"],
+  summary:"Skinner's schedules describe when reinforcement arrives, split into duration schedules (based on time) and ratio schedules (based on number of responses), each of which can be fixed or variable. Continuous reinforcement — rewarding every single repetition — is impractical and leaves behavior prone to extinction. The deck's headline principle is that unpredictable reinforcement produces the most predictable behavior.",
+  points:[
+    "Analysis of behavior involves the effects of a schedule of reinforcement over time; the schedules listed are Skinner's.",
+    "Duration Fixed: reinforcement is presented at fixed time periods, after the dog has performed the behavior.",
+    "Duration Variable: the response is rewarded after the behavior has been performed for an unpredictable amount of time.",
+    "Ratio Fixed: reinforcement is delivered after a specific number of responses.",
+    "Ratio Variable: the response is reinforced after an unpredictable number of responses.",
+    "Continuous reinforcement means every time a specific action is performed the subject instantly receives a reinforcement; it is impractical to use consistently and behavior is prone to extinction.",
+    "Fixed Ratio (FR) produces a high, steady rate of response with only a brief pause after the delivery of the reinforcement.",
+    "Variable Ratio (VR) creates a high, steady rate of responding and produces slightly higher rates than FR because the organism doesn't know when the next reinforcement is; the higher the ratio, the higher the response."
+  ],
+  verbatim:[
+    {t:"Skinner's notable schedules of reinforcement (verbatim)",body:"Duration\n    Fixed; presented at fixed time periods, after dog has performed the behavior.\n    Variable; Response is rewarded after the behavior has been performed for an\n    unpredictable amount of time\n\nRatio\n    Fixed; Reinforcement is delivered after a specific number of responses\n    Variable; Response is reinforced after an unpredictable number of responses"},
+    {t:"The headline principle",body:"Unpredictability in reinforcement = Greater predictability in behavior"}
+  ],
+  questions:[
+    {type:"mc",q:"Whose notable schedules of reinforcement does the deck present?",opts:["Skinner's","Pavlov's","Karen Pryor's","John Watson's"],a:0,src:"IMG_3658.HEIC",why:"“Skinner's notable schedules of reinforcement:” introduces the list."},
+    {type:"mc",q:"What are the two families of schedule listed?",opts:["Duration and Ratio","Fixed and Variable","Primary and Secondary","Positive and Negative"],a:0,src:"IMG_3658.HEIC",why:"The two headings are Duration and Ratio; Fixed and Variable are the sub-types under each."},
+    {type:"mc",q:"Fixed duration means reinforcement is…",opts:["Presented at fixed time periods, after the dog has performed the behavior","Delivered after a specific number of responses","Given every single time","Withheld until the dog offers a new behavior"],a:0,src:"IMG_3658.HEIC",why:"That is the slide's exact definition of Duration — Fixed. A specific number of responses is the Ratio — Fixed definition."},
+    {type:"mc",q:"Variable duration means the response is rewarded after…",opts:["The behavior has been performed for an unpredictable amount of time","An unpredictable number of responses","Exactly 30 seconds","The dog offers three behaviors"],a:0,src:"IMG_3658.HEIC",why:"Duration — Variable is about an unpredictable amount of time; an unpredictable number of responses is Ratio — Variable."},
+    {type:"mc",q:"Fixed ratio means reinforcement is delivered after…",opts:["A specific number of responses","A fixed period of time","Every response","An unpredictable number of responses"],a:0,src:"IMG_3658.HEIC",why:"“Fixed; Reinforcement is delivered after a specific number of responses.”"},
+    {type:"fib",q:"Variable ratio: the response is reinforced after an <span class='blank'>__________</span> number of responses.",acc:["unpredictable"],src:"IMG_3658.HEIC",why:"“Variable; Response is reinforced after an unpredictable number of responses.”"},
+    {type:"mc",q:"What does continuous reinforcement mean?",opts:["Every time a specific action is performed the subject instantly receives a reinforcement","Reinforcement arrives on a fixed clock","Reinforcement is given at random","Reinforcement continues after training ends"],a:0,src:"IMG_3659.HEIC",why:"“Every time a specific action is performed the subject instantly receives a reinforcement.”"},
+    {type:"tf",q:"Continuous reinforcement is impractical to use consistently, and behavior on it is prone to extinction.",a:true,src:"IMG_3659.HEIC",why:"Both statements appear as bullets on the Continuous Reinforcement slide."},
+    {type:"fib",q:"Complete the principle: “Unpredictability in reinforcement = Greater <span class='blank'>__________</span> in behavior.”",acc:["predictability"],src:"IMG_3659.HEIC",why:"This is the bold italic line closing the Continuous Reinforcement slide."},
+    {type:"mc",q:"What does a Fixed Ratio (FR) schedule produce?",opts:["A high, steady rate of response with only a brief pause after the delivery of the reinforcement","A slow, irregular rate of response","No response at all without a clicker","A response only under distraction"],a:0,src:"IMG_3660.HEIC",why:"That is the slide's description of FR — note the brief pause after reinforcement, which VR does not have."},
+    {type:"tf",q:"Variable Ratio schedules produce slightly higher rates of responding than Fixed Ratio schedules.",a:true,src:"IMG_3660.HEIC",why:"“VR produce slightly higher rates of responding than FR; organism doesn't know when next reinforcement is.”"},
+    {type:"fib",q:"“The higher the ratio, the higher the <span class='blank'>__________</span>.”",acc:["response","responding"],src:"IMG_3660.HEIC",why:"The final line of the Ratio Schedules slide."}
+  ]
+},
+{
+  id:"clicker",
+  title:"Clicker Training — Tool, History & Mechanics",
+  sources:["IMG_3621 2.HEIC","IMG_3631 2.HEIC","IMG_3632 2.HEIC"],
+  summary:"The clicker applies operant conditioning through positive reinforcement, and has a history running from a 1940s novelty noisemaker through Skinner's lab and marine mammal training to Karen Pryor's popularisation in dog training. Once charged it functions as a communication tool and a discriminative stimulus. The deck contrasts two styles: “pure” clicker training, which waits for the dog to offer behavior, and “assisted”, which lures or leads.",
+  points:[
+    "The clicker is a tool for training using Operant Conditioning principles; positive reinforcement.",
+    "The clicker was originally sold as a noisemaker in the 1940s called a “cricket”.",
+    "The clicker was used in B.F. Skinner's lab and to train marine mammals.",
+    "Karen Pryor popularized the clicker's use in dog training.",
+    "Sᴰ = Discriminative Stimulus. Dogs understand Sᴰ; dogs do not speak English, etc.; Sᴰ can be visual, audible, or physical.",
+    "The dog learns to make you click — clicker savvy dogs offer behaviors — and timing is crucial.",
+    "“Pure” clicker training: wait for the behavior; longer retention; self discovery.",
+    "“Assisted” clicker training: lure or lead the dog; begin with something closer to the desired goal."
+  ],
+  verbatim:[
+    {t:"Clicker training styles (verbatim)",body:"“PURE” CLICKER TRAINING          “ASSISTED” CLICKER TRAINING\nWait for the behavior             Lure or lead the dog\nLonger retention                  Begin with something closer to the\nSelf Discovery                    desired goal"},
+    {t:"Discriminative stimulus",body:"Sᴰ = Discriminative Stimulus\n    Dogs understand Sᴰ\n    Dogs do not speak English, etc.\n    Sᴰ can be visual, audible, or physical"}
+  ],
+  questions:[
+    {type:"mc",q:"The clicker is a tool for training using which principles?",opts:["Operant Conditioning principles; positive reinforcement","Classical conditioning only","Instinctive drift","Negative reinforcement"],a:0,src:"IMG_3621 2.HEIC",why:"“The clicker is a tool for training using Operant Conditioning principles; positive reinforcement.”"},
+    {type:"fib",q:"The clicker was originally sold as a noisemaker in the 1940s called a “<span class='blank'>__________</span>”.",acc:["cricket"],src:"IMG_3621 2.HEIC",why:"“Originally sold as a noisemaker in the 1940s called a ‘cricket’.”"},
+    {type:"mc",q:"Where was the clicker used before it reached dog training?",opts:["B.F. Skinner's lab, and to train marine mammals","Police K9 units","Circus horse training","Only in laboratories"],a:0,src:"IMG_3621 2.HEIC",why:"“Used in B.F. Skinner's lab and to train marine mammals.”"},
+    {type:"mc",q:"Who popularized the clicker's use in dog training?",opts:["Karen Pryor","B.F. Skinner","Ivan Pavlov","Konrad Lorenz"],a:0,src:"IMG_3621 2.HEIC",why:"“Karen Pryor popularized its use in dog training.”"},
+    {type:"fib",q:"Sᴰ stands for <span class='blank'>__________</span> Stimulus.",acc:["discriminative"],src:"IMG_3631 2.HEIC",why:"“Sᴰ = Discriminative Stimulus.”"},
+    {type:"mc",q:"An Sᴰ can be…",opts:["Visual, audible, or physical","Audible only","Visual only","Verbal only"],a:0,src:"IMG_3631 2.HEIC",why:"“Sᴰ can be visual, audible, or physical” — which matters because “dogs do not speak English, etc.”"},
+    {type:"tf",q:"According to the deck, clicker savvy dogs offer behaviors.",a:true,src:"IMG_3631 2.HEIC",why:"Bolded on the slide, under “Dog learns to make you click.”"},
+    {type:"mc",q:"How does the clicker training slide describe timing?",opts:["Crucial","Optional","Secondary to food value","Only relevant for puppies"],a:0,src:"IMG_3631 2.HEIC",why:"The slide closes with the line “Timing is crucial.”"},
+    {type:"mc",q:"“Pure” clicker training means you…",opts:["Wait for the behavior","Lure the dog into position","Physically place the dog","Use a leash to guide"],a:0,src:"IMG_3632 2.HEIC",why:"The “pure” column reads: Wait for the behavior / Longer retention / Self Discovery."},
+    {type:"mc",q:"Which benefit is listed under “pure” clicker training?",opts:["Longer retention","Faster initial results","Easier for beginners","Requires less equipment"],a:0,src:"IMG_3632 2.HEIC",why:"“Longer retention” is the second item in the “pure” column."},
+    {type:"mc",q:"“Assisted” clicker training means you…",opts:["Lure or lead the dog","Wait for the behavior to happen on its own","Punish incorrect attempts","Never use food"],a:0,src:"IMG_3632 2.HEIC",why:"“Lure or lead the dog / Begin with something closer to the desired goal.”"},
+    {type:"fib",q:"The third item in the “pure” clicker training column is “Self <span class='blank'>__________</span>”.",acc:["discovery"],src:"IMG_3632 2.HEIC",why:"The column reads: Wait for the behavior / Longer retention / Self Discovery."}
+  ]
+},
+{
+  id:"charging",
+  title:"Starting & “Charging” the Clicker",
+  sources:["IMG_3629 2.HEIC","IMG_3630 2.HEIC"],
+  summary:"Before any clicker work you first establish what the dog will work for and rank those motivators into a hierarchy — while noting the top of that hierarchy isn't always the right choice. The second step is charging the clicker: a pure classical-conditioning exercise pairing the sound with a treat until the noise itself promises reward.",
+  points:[
+    "Step one is to figure out what motivates the dog; the examples given are dry kibble, cheese, tennis ball and tug.",
+    "You must work out which motivator holds the highest value and build a hierarchy from them.",
+    "You may not always want to use the highest value motivator.",
+    "Step two is charging the clicker, which the deck labels explicitly as classical conditioning.",
+    "The charging formula is Click = Treat.",
+    "During charging the dog is not required to do anything initially; the noise promises reward.",
+    "Charging should be done 3-4 times per day, for 5-6 days, and can be done while nursing."
+  ],
+  verbatim:[
+    {t:"Starting with a clicker (verbatim)",body:"First, figure out what motivates the dog:\n    Dry kibble\n    Cheese\n    Tennis ball\n    Tug\n\nWhich holds the highest value?\nBuild a hierarchy\n\nYou may not always want to use the highest value motivator"},
+    {t:"“Charging” the clicker (verbatim)",body:"Second, charge the clicker; classical conditioning:\n\n    Click = Treat\n\nThe dog is not required to do anything initially\nNoise promises reward\n3-4 times per day, for 5-6 days\nCharge while nursing"}
+  ],
+  questions:[
+    {type:"mc",q:"What is the FIRST step when starting with a clicker?",opts:["Figure out what motivates the dog","Charge the clicker","Teach a sit","Build duration"],a:0,src:"IMG_3629 2.HEIC",why:"“First, figure out what motivates the dog” — charging is explicitly the second step."},
+    {type:"mc",q:"Which motivators does the slide list?",opts:["Dry kibble, cheese, tennis ball, tug","Praise, petting, walks, car rides","Freedom, sleep, play, water","Beef, chicken, liver, cheese"],a:0,src:"IMG_3629 2.HEIC",why:"Those four are the only motivators listed on the slide."},
+    {type:"fib",q:"After identifying motivators you ask which holds the highest value, and build a <span class='blank'>__________</span>.",acc:["hierarchy"],src:"IMG_3629 2.HEIC",why:"“Which holds the highest value? Build a hierarchy.”"},
+    {type:"tf",q:"The deck says you should always use the highest value motivator available.",a:false,src:"IMG_3629 2.HEIC",why:"The opposite: “You may not always want to use the highest value motivator.”"},
+    {type:"mc",q:"Charging the clicker is an example of which kind of conditioning?",opts:["Classical conditioning","Operant conditioning","Negative reinforcement","Shaping"],a:0,src:"IMG_3630 2.HEIC",why:"The slide states it directly: “Second, charge the clicker; classical conditioning.”"},
+    {type:"fib",q:"The charging formula on the slide is “Click = <span class='blank'>__________</span>”.",acc:["treat"],src:"IMG_3630 2.HEIC",why:"“Click = Treat” is the bolded centre line of the slide."},
+    {type:"tf",q:"During charging, the dog is not required to do anything initially.",a:true,src:"IMG_3630 2.HEIC",why:"“The dog is not required to do anything initially.”"},
+    {type:"mc",q:"How often should the clicker be charged?",opts:["3-4 times per day, for 5-6 days","Once a day for a month","10 times a day for 2 days","Only at mealtimes"],a:0,src:"IMG_3630 2.HEIC",why:"“3-4 times per day, for 5-6 days.”"},
+    {type:"fib",q:"On the charging slide: “Noise <span class='blank'>__________</span> reward.”",acc:["promises","promise"],src:"IMG_3630 2.HEIC",why:"“Noise promises reward” is the bullet after “The dog is not required to do anything initially.”"},
+    {type:"tf",q:"The deck says you can charge the clicker while nursing.",a:true,src:"IMG_3630 2.HEIC",why:"“Charge while nursing” is the final line of the slide."}
+  ]
+},
+{
+  id:"shaping",
+  title:"Successive Approximations & Training Games",
+  sources:["IMG_3622 2.HEIC","IMG_3634 2.HEIC"],
+  summary:"Successive approximations — shaping — means breaking a complex behavior into small pieces, argued through a series of questions that escalate from making a dog sit to making a three-ton whale do anything. The deck then names three classroom training games that isolate reinforcement, punishment, and the two combined.",
+  points:[
+    "Successive Approximations means breaking complex behavior into small pieces — also known as shaping.",
+    "The slide poses four escalating questions: can you physically make a dog sit? make a dog down? make a dog open the refrigerator? make a three-ton whale do anything?",
+    "The Training Game uses Communication and the Clicker.",
+    "The Negative Training Game allows only punishments, marked with “NO!”.",
+    "The Combination Training Game uses Reinforcement (Clicker) together with Punishment (“NO!”).",
+    "Three training games are listed in total: The Training Game, The Negative Training Game, and The Combination Training Game."
+  ],
+  verbatim:[
+    {t:"Successive Approximations (verbatim)",body:"Breaking complex behavior into small pieces – also known as shaping\n\n    Can you physically make a dog sit?\n    Can you physically make a dog down?\n    Can you physically make a dog open the refrigerator?\n    Can you physically make a three-ton whale do anything?"},
+    {t:"Training games (verbatim)",body:"The Training Game\n    Communication\n    Clicker\n\nThe Negative Training Game\n    Only Punishments are Allowed\n    NO!\n\nThe Combination Training Game\n    Reinforcement - Clicker\n    Punishment - NO!"}
+  ],
+  note:"This topic draws on only two slides, so it carries 9 questions rather than the full 12.",
+  questions:[
+    {type:"fib",q:"Breaking complex behavior into small pieces is also known as <span class='blank'>__________</span>.",acc:["shaping"],src:"IMG_3622 2.HEIC",why:"“Breaking complex behavior into small pieces – also known as shaping.”"},
+    {type:"mc",q:"What is the formal term the deck uses for breaking complex behavior into small pieces?",opts:["Successive Approximations","Instinctive drift","Continuous reinforcement","Discriminative stimulus"],a:0,src:"IMG_3622 2.HEIC",why:"“Successive Approximations” is the slide title; shaping is given as the alternative name."},
+    {type:"mc",q:"Which rhetorical question appears on the Successive Approximations slide?",opts:["Can you physically make a three-ton whale do anything?","Can you outrun a dog?","Can you clicker train a cat?","Can a dog open a window?"],a:0,src:"IMG_3622 2.HEIC",why:"It is the last and most pointed of the four questions, after sit, down, and opening the refrigerator."},
+    {type:"tf",q:"One of the questions on the slide is “Can you physically make a dog open the refrigerator?”",a:true,src:"IMG_3622 2.HEIC",why:"It is the third of the four escalating questions."},
+    {type:"mc",q:"What two things are listed under “The Training Game”?",opts:["Communication and Clicker","Punishment and NO!","Reinforcement and Punishment","Lure and Reward"],a:0,src:"IMG_3634 2.HEIC",why:"The Training Game lists exactly “Communication” and “Clicker”."},
+    {type:"mc",q:"In “The Negative Training Game”, what is allowed?",opts:["Only punishments","Only reinforcements","Both punishments and reinforcements","Neither"],a:0,src:"IMG_3634 2.HEIC",why:"“Only Punishments are Allowed — NO!”"},
+    {type:"fib",q:"In the Negative and Combination Training Games, the punishment marker used is the word “<span class='blank'>__________</span>!”",acc:["no"],src:"IMG_3634 2.HEIC",why:"Both games use “NO!” as the punishment marker, against the clicker as the reinforcement marker."},
+    {type:"mc",q:"What does “The Combination Training Game” pair together?",opts:["Reinforcement - Clicker with Punishment - NO!","Clicker with treats","Lure with clicker","Voice with leash"],a:0,src:"IMG_3634 2.HEIC",why:"“Reinforcement - Clicker / Punishment - NO!”"},
+    {type:"tf",q:"Three training games are listed: The Training Game, The Negative Training Game, and The Combination Training Game.",a:true,src:"IMG_3634 2.HEIC",why:"Those are the three bolded headings on the Training Games slide."}
+  ]
+},
+{
+  id:"constraints",
+  title:"Instinctive Drift & Taste Aversion Learning",
+  sources:["IMG_3665.HEIC","IMG_3666.HEIC"],
+  summary:"Two slides cover the biological limits on what conditioning can achieve. Instinctive drift is innate behavior pulling the dog away from learning, while taste aversion learning shows how powerfully a single sickness event can teach avoidance — illustrated by the lithium chloride coyote study, and by a failed attempt to apply the same logic to coprophagia in dogs.",
+  points:[
+    "Instinctive drift is innate traits or behaviors that distracts the dog from learning.",
+    "The examples of instinctive drift given are chasing a squirrel, digging, swimming, and sniffing the ground.",
+    "In taste aversion learning, animals learn about new foods by trial and error; if they get sick, they probably won't do it again.",
+    "In the coyote study, dead sheep were laced with lithium chloride, which induces powerful nausea in coyotes.",
+    "The coyote eats the sheep, becomes ill, and avoids sheep in the future.",
+    "Taste aversion was tried with dogs to avoid coprophagia, using ipecac on feces.",
+    "The ipecac approach was ineffective because it does not create the necessary feelings of nausea.",
+    "“Medical treatments” is listed as a further context for taste aversion learning."
+  ],
+  verbatim:[
+    {t:"Instinctive drift (verbatim)",body:"Innate traits or behaviors that distracts the dog from learning:\n\n    Chasing a squirrel\n    Digging\n    Swimming\n    Sniffing the ground"},
+    {t:"Taste aversion learning (verbatim)",body:"Animals learn about new foods by trial and error\n\n    If they get sick; they probably won't do it again\n\n    Dead sheep laced with lithium chloride\n        Induces powerful nausea in coyotes\n        Coyote eats sheep; becomes ill\n        Avoids sheep in the future\n\n    Tried with dogs to avoid coprophagia\n        Ipecac on feces\n        Ineffective; does not create necessary feelings of nausea\n\n    Medical treatments"}
+  ],
+  questions:[
+    {type:"mc",q:"How does the deck define instinctive drift?",opts:["Innate traits or behaviors that distracts the dog from learning","Learned behaviors that fade over time","A schedule of reinforcement","A category of punishment"],a:0,src:"IMG_3665.HEIC",why:"That is the slide's wording verbatim."},
+    {type:"mc",q:"Which of these is given as an example of instinctive drift?",opts:["Chasing a squirrel","Sitting on command","Heeling","Retrieving a dumbbell"],a:0,src:"IMG_3665.HEIC",why:"The four examples are chasing a squirrel, digging, swimming, and sniffing the ground — all innate, none trained."},
+    {type:"tf",q:"“Sniffing the ground” is listed as an example of instinctive drift.",a:true,src:"IMG_3665.HEIC",why:"It is the fourth and last example on the slide."},
+    {type:"fib",q:"The instinctive drift examples are chasing a squirrel, digging, <span class='blank'>__________</span>, and sniffing the ground.",acc:["swimming","swim"],src:"IMG_3665.HEIC",why:"The list reads: Chasing a squirrel / Digging / Swimming / Sniffing the ground."},
+    {type:"mc",q:"In taste aversion learning, how do animals learn about new foods?",opts:["By trial and error","By watching humans","By smell alone","By instinct alone"],a:0,src:"IMG_3666.HEIC",why:"“Animals learn about new foods by trial and error — if they get sick; they probably won't do it again.”"},
+    {type:"fib",q:"In the coyote study, dead sheep were laced with <span class='blank'>__________</span> chloride.",acc:["lithium"],src:"IMG_3666.HEIC",why:"“Dead sheep laced with lithium chloride.”"},
+    {type:"mc",q:"What did the lithium chloride induce in coyotes?",opts:["Powerful nausea","Deep sleep","Aggression","Blindness"],a:0,src:"IMG_3666.HEIC",why:"“Induces powerful nausea in coyotes.” The nausea is the whole mechanism."},
+    {type:"mc",q:"What was the outcome for the coyote in the study?",opts:["Avoids sheep in the future","Eats more sheep","Becomes tame","No change in behavior"],a:0,src:"IMG_3666.HEIC",why:"“Coyote eats sheep; becomes ill / Avoids sheep in the future.”"},
+    {type:"fib",q:"Taste aversion was tried with dogs to avoid <span class='blank'>__________</span> (the eating of feces).",acc:["coprophagia","coprophagy"],src:"IMG_3666.HEIC",why:"“Tried with dogs to avoid coprophagia.”"},
+    {type:"mc",q:"What substance was placed on feces in the dog trial?",opts:["Ipecac","Lithium chloride","Vinegar","Cayenne pepper"],a:0,src:"IMG_3666.HEIC",why:"“Ipecac on feces.” Lithium chloride was the coyote/sheep study, not the dog trial."},
+    {type:"tf",q:"The ipecac-on-feces approach was effective at stopping coprophagia.",a:false,src:"IMG_3666.HEIC",why:"“Ineffective; does not create necessary feelings of nausea.”"}
+  ]
+}
+];
+
+const MIXED_SIZE = 20;
+const DRILL_SIZE = 12;
+
+// Stable id per question so per-question stats survive across sessions and
+// carry through mixed/drill/retry copies of the same question.
+TOPICS.forEach(t => t.questions.forEach((q,i) => { q.qid = t.id + "#" + i; }));
+const TOTAL_Q = TOPICS.reduce((n,t) => n + t.questions.length, 0);
+
+/* ============================================================
+   SPACED REVIEW / EXAM CONSTANTS
+   ============================================================ */
+const REVIEW_IVS = [3,7,14,30].map(d => d*24*60*60*1000);
+function ivLabel(i){ return ["3 days","1 week","2 weeks","1 month"][Math.min(i, REVIEW_IVS.length-1)]; }
+const EXAM_SIZE = 30, EXAM_PASS = 80;
+const EXAM_MS = () => window.__examMs || 20*60*1000;   // override hook for testing
+
+/* ============================================================
+   CONFUSABLES — verbatim slide definitions, side by side
+   ============================================================ */
+const CONFUSABLES = [
+ {id:"posneg", title:"Positive vs. Negative",
+  l:{name:"Positive (+)", lines:["Addition or Presence of stimulus"]},
+  r:{name:"Negative (−)", lines:["Removal or Absence of stimulus"]},
+  tip:"“Positive/negative” is arithmetic — add vs. remove — not good vs. bad.", src:"IMG_3638"},
+ {id:"rp", title:"Reinforcement vs. Punishment",
+  l:{name:"Reinforcement (R)", lines:["Increases behavior","Any event that strengthens or increases the behavior it follows"]},
+  r:{name:"Punishment (P)", lines:["Decreases behavior","The presentation of an adverse event or outcome that decreases in the behavior it follows."]},
+  tip:"Ask one question: did the behavior go up or down afterwards?", src:"IMG_3638 · IMG_3635"},
+ {id:"nrpp", title:"Negative Reinforcement vs. Positive Punishment",
+  l:{name:"Negative Reinforcers", lines:["removal of unfavorable events or outcomes after behavior","Response is strengthened by the removal of something considered unpleasant."]},
+  r:{name:"Positive Punishment", lines:["the presentation of an unfavorable event or outcome in order to weaken the response it follows"]},
+  tip:"Both involve something unpleasant — the difference is remove-to-strengthen vs. add-to-weaken.", src:"IMG_3639 · IMG_3661"},
+ {id:"escav", title:"Escape vs. Avoidance",
+  l:{name:"Escape", lines:["Removes a stimulus","Remove undesirable stimuli following correct behavior"]},
+  r:{name:"Avoidance", lines:["Prevents a stimulus","Correct behavior avoids undesirable stimuli"]},
+  tip:"Escape = the unpleasant thing already started; avoidance = it never arrives.", src:"IMG_3638 · IMG_3636"},
+ {id:"frvr", title:"Fixed Ratio vs. Variable Ratio",
+  l:{name:"Fixed Ratio (FR)", lines:["Reinforcement is delivered after a specific number of responses","Produces a high, steady rate of response with only a brief pause after the delivery of the reinforcement"]},
+  r:{name:"Variable Ratio (VR)", lines:["Response is reinforced after an unpredictable number of responses","Creates a high, steady rate of responding","VR produce slightly higher rates of responding than FR; organism doesn’t know when next reinforcement is"]},
+  tip:"Both count responses; only VR is unpredictable — which is why it produces slightly higher response rates.", src:"IMG_3658 · IMG_3660"},
+ {id:"primsec", title:"Primary vs. Secondary Reinforcers",
+  l:{name:"Primary (unconditioned)", lines:["[Dog believes] it cannot live without","Food · Water · Social interaction · Play · Sex · Sleep · Freedom"]},
+  r:{name:"Secondary (conditioned)", lines:["Developed association","Praise · Toys · Clicker"]},
+  tip:"Primary = survival needs; secondary = learned signals that stand in for them.", src:"IMG_3623"},
+ {id:"clop", title:"Classical vs. Operant Conditioning",
+  l:{name:"Classical (Pavlovian / respondent)", lines:["learning through association","two stimuli are linked together to produce a new learned response in a person or animal"]},
+  r:{name:"Operant (instrumental)", lines:["behavior is modified by consequences; association is made between a behavior and its consequence","learning occurs through rewards and punishments for behavior"]},
+  tip:"Stimulus↔stimulus is classical; behavior↔consequence is operant.", src:"IMG_3618 · IMG_3619"}
+];
+const RAPID = [
+ ["posneg","Addition or Presence of stimulus","L"],
+ ["posneg","Removal or Absence of stimulus","R"],
+ ["rp","Increases behavior","L"],
+ ["rp","Decreases behavior","R"],
+ ["nrpp","Response is strengthened by the removal of something considered unpleasant","L"],
+ ["nrpp","The presentation of an unfavorable event or outcome in order to weaken the response it follows","R"],
+ ["nrpp","Removal of unfavorable events or outcomes after behavior","L"],
+ ["escav","Removes a stimulus","L"],
+ ["escav","Prevents a stimulus","R"],
+ ["escav","Remove undesirable stimuli following correct behavior","L"],
+ ["escav","Correct behavior avoids undesirable stimuli","R"],
+ ["frvr","Reinforcement is delivered after a specific number of responses","L"],
+ ["frvr","Response is reinforced after an unpredictable number of responses","R"],
+ ["frvr","Produces a high, steady rate of response with only a brief pause after the delivery of the reinforcement","L"],
+ ["frvr","The organism doesn’t know when the next reinforcement is coming","R"],
+ ["primsec","Food, water, social interaction, play, sleep, freedom","L"],
+ ["primsec","Praise, toys, clicker","R"],
+ ["primsec","The dog believes it cannot live without these (unconditioned)","L"],
+ ["primsec","Developed association (conditioned)","R"],
+ ["clop","Two stimuli are linked together to produce a new learned response","L"],
+ ["clop","Behavior is modified by consequences","R"],
+ ["clop","Also called respondent conditioning","L"],
+ ["clop","Also called instrumental conditioning","R"],
+ ["clop","Discovered by Ivan Pavlov, a Russian physiologist","L"]
+].map(([cid,text,side]) => ({cid,text,side}));
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const KEY = "learning-theory-study-v1";
+let state = load();
+
+function load(){
+  let s = null;
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw) s = JSON.parse(raw);
+  }catch(e){}
+  if(!s) s = {best:{},seen:{}};
+  if(!s.q) s.q = {};   // per-question stats: {qid:{s:seen, r:right, k:streak}}
+  return s;
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const main = $("#main");
+const nav = $("#nav");
+
+function norm(s){
+  return String(s).toLowerCase().trim()
+    .replace(/[‘’]/g,"'").replace(/[“”]/g,'"')
+    .replace(/[.,;:!?"']/g,"").replace(/\s+/g," ");
+}
+function esc(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function shuffle(a){
+  const r = a.slice();
+  for(let i=r.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [r[i],r[j]]=[r[j],r[i]]; }
+  return r;
+}
+function pct(id){
+  const b = state.best[id];
+  if(!b || !b.total) return 0;
+  return Math.round(100*b.correct/b.total);
+}
+
+/* ---- mastery: a question is mastered once answered right twice in a row ---- */
+function topicMastery(t){
+  // m: mastered (streak ≥2) · weak: last-wrong or error history, not mastered
+  // unseen: never answered. First-time-right questions (streak 1, no errors)
+  // count in none of these — they're simply in progress.
+  let m = 0, weak = 0, unseen = 0;
+  t.questions.forEach(q => {
+    const s = state.q[q.qid];
+    if(!s || !s.s) unseen++;
+    else if(s.k >= 2) m++;
+    else if(s.k === 0 || s.r < s.s) weak++;
+  });
+  return {m, weak, unseen};
+}
+function weakCounts(){
+  let m = 0, weak = 0, unseen = 0;
+  TOPICS.forEach(t => { const tm = topicMastery(t); m += tm.m; weak += tm.weak; unseen += tm.unseen; });
+  return {m, weak, unseen};
+}
+function weakPool(){
+  // Last-answer-wrong first, then near-misses with an error history,
+  // topped up with never-seen questions.
+  const a = [], b = [], c = [];
+  TOPICS.forEach(t => t.questions.forEach(q => {
+    const s = state.q[q.qid];
+    const qq = Object.assign({}, q, {_topic: t.title});
+    if(!s || !s.s) c.push(qq);
+    else if(s.k === 0) a.push(qq);
+    else if(s.k < 2 && s.r < s.s) b.push(qq);
+  }));
+  return shuffle(a).concat(shuffle(b), shuffle(c)).slice(0, DRILL_SIZE);
+}
+
+/* ---- spaced review: mastered questions come due on widening intervals ---- */
+function duePool(){
+  const now = Date.now(), due = [];
+  TOPICS.forEach(t => t.questions.forEach(q => {
+    const s = state.q[q.qid];
+    if(s && s.k >= 2 && s.due && s.due <= now) due.push(Object.assign({}, q, {_topic: t.title}));
+  }));
+  return shuffle(due);
+}
+function nextDueAt(){
+  let min = null;
+  TOPICS.forEach(t => t.questions.forEach(q => {
+    const s = state.q[q.qid];
+    if(s && s.k >= 2 && s.due && (min === null || s.due < min)) min = s.due;
+  }));
+  return min;
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+function renderNav(){
+  nav.innerHTML = "";
+  TOPICS.forEach(t=>{
+    const tm = topicMastery(t);
+    const total = t.questions.length;
+    const p = Math.round(100*tm.m/total);
+    const started = tm.m + tm.weak > 0;
+    const btn = document.createElement("button");
+    btn.className = "navbtn" + (current===t.id ? " active":"");
+    btn.innerHTML =
+      '<div class="row"><span class="t">'+esc(t.title)+'</span>'+
+      '<span class="sc">'+(started? tm.m+"/"+total+" ✓" : total+" q")+'</span></div>'+
+      '<div class="bar"><i class="'+(p===100?"full":"")+'" style="width:'+p+'%"></i></div>';
+    btn.onclick = ()=>{ current=t.id; showTopic(t.id); closeMenu(); };
+    nav.appendChild(btn);
+  });
+
+  const wk = weakCounts();
+  const dr = document.createElement("button");
+  dr.className = "navbtn" + (current==="__drill" ? " active":"");
+  dr.innerHTML =
+    '<div class="row"><span class="t">🎯 Drill my weakest</span>'+
+    '<span class="sc">'+(wk.weak? wk.weak+" to fix" : (wk.unseen? wk.unseen+" unseen" : "all ✓"))+'</span></div>';
+  dr.onclick = ()=>{ current="__drill"; showDrillIntro(); closeMenu(); };
+  nav.appendChild(dr);
+
+  const dueN = duePool().length;
+  const du = document.createElement("button");
+  du.className = "navbtn" + (current==="__due" ? " active":"");
+  du.innerHTML =
+    '<div class="row"><span class="t">📅 Due today</span>'+
+    '<span class="sc">'+(dueN? dueN+" due" : "none")+'</span></div>';
+  du.onclick = ()=>{ current="__due"; showDueIntro(); closeMenu(); };
+  nav.appendChild(du);
+
+  const cf = document.createElement("button");
+  cf.className = "navbtn" + (current==="__conf" ? " active":"");
+  cf.innerHTML =
+    '<div class="row"><span class="t">⚖️ Confusables</span>'+
+    '<span class="sc">'+(state.rapid? state.rapid.score+"/"+state.rapid.total : CONFUSABLES.length+" pairs")+'</span></div>';
+  cf.onclick = ()=>{ current="__conf"; showConfusables(); closeMenu(); };
+  nav.appendChild(cf);
+
+  const exb = state.examBest;
+  const ex = document.createElement("button");
+  ex.className = "navbtn" + (current==="__exam" ? " active":"");
+  ex.innerHTML =
+    '<div class="row"><span class="t">📝 Exam mode</span>'+
+    '<span class="sc">'+(exb? Math.round(100*exb.correct/exb.total)+"%"+(exb.pass?" ✓":"") : EXAM_SIZE+" q")+'</span></div>';
+  ex.onclick = ()=>{ current="__exam"; showExamIntro(); closeMenu(); };
+  nav.appendChild(ex);
+
+  const mp = pct("__mixed");
+  const mb = state.best["__mixed"];
+  const mx = document.createElement("button");
+  mx.className = "navbtn" + (current==="__mixed" ? " active":"");
+  mx.innerHTML =
+    '<div class="row"><span class="t">↻ Mixed review</span>'+
+    '<span class="sc">'+(mb? mb.correct+"/"+mb.total : MIXED_SIZE+" q")+'</span></div>'+
+    '<div class="bar"><i class="'+(mp===100?"full":"")+'" style="width:'+mp+'%"></i></div>';
+  mx.onclick = ()=>{ current="__mixed"; showMixedIntro(); closeMenu(); };
+  nav.appendChild(mx);
+
+  const oc = weakCounts();
+  const touched = oc.m + oc.weak > 0;
+  $("#overallNum").textContent = touched ? Math.round(100*oc.m/TOTAL_Q)+"%" : "—";
+  $("#overallLbl").textContent = touched
+    ? oc.m+" of "+TOTAL_Q+" mastered (2 right in a row)"
+    : "no questions answered yet";
+}
+
+function closeMenu(){ stopExamTimer(); $("#aside").classList.remove("open"); window.scrollTo(0,0); }
+$("#menutoggle").onclick = ()=> $("#aside").classList.toggle("open");
+$("#resetbtn").onclick = ()=>{
+  if(confirm("Reset all quiz scores, mastery stats and progress?")){
+    state = {best:{},seen:{},q:{}}; save();
+    current = TOPICS[0].id;
+    renderNav(); showTopic(current);
+  }
+};
+
+/* ============================================================
+   STUDY SHEET
+   ============================================================ */
+let current = TOPICS[0].id;
+
+function showTopic(id){
+  current = id;
+  const t = TOPICS.find(x=>x.id===id);
+  const n = TOPICS.indexOf(t)+1;
+  let html =
+    '<div class="kicker">Topic '+n+' of '+TOPICS.length+'</div>'+
+    '<h1>'+esc(t.title)+'</h1>'+
+    '<p class="summary">'+esc(t.summary)+'</p>'+
+    '<h2>Key points</h2><ul class="points">'+
+      t.points.map(p=>'<li>'+esc(p)+'</li>').join("")+
+    '</ul>';
+
+  if(t.verbatim && t.verbatim.length){
+    html += '<h2>From the slides, verbatim</h2>';
+    t.verbatim.forEach(v=>{
+      html += '<div class="verbatim"><div class="vt">'+esc(v.t)+'</div><pre>'+esc(v.body)+'</pre></div>';
+    });
+  }
+  if(t.note) html += '<div class="note">'+esc(t.note)+'</div>';
+
+  const b = state.best[t.id];
+  const tm = topicMastery(t);
+  const mline = (tm.m + tm.weak > 0)
+    ? 'Mastered '+tm.m+'/'+t.questions.length
+      +(tm.weak? ' · '+tm.weak+' need work':'')
+      +(tm.unseen? ' · '+tm.unseen+' unseen':'')
+    : null;
+  const meta = [b? 'Best run: '+b.correct+'/'+b.total : null, mline].filter(Boolean).join('  ·  ');
+  html += '<div class="btnrow">'+
+    '<button class="btn" id="startquiz">'+(b?"Retake quiz":"Start quiz")+' · '+t.questions.length+' questions</button>'+
+    (meta? '<span style="align-self:center;color:var(--muted);font-size:14px">'+meta+'</span>':'')+
+  '</div>';
+
+  html += '<div class="srcs">Source images: '+t.sources.map(esc).join(" · ")+'</div>';
+
+  main.innerHTML = html;
+  $("#startquiz").onclick = ()=> startQuiz(t.questions, t.id, t.title);
+  renderNav();
+  window.scrollTo(0,0);
+}
+
+function showDrillIntro(){
+  const wk = weakCounts();
+  const pool = weakPool();
+  main.innerHTML =
+    '<div class="kicker">Weak-spot drill</div>'+
+    '<h1>Drill my weakest</h1>'+
+    '<p class="summary">A focused set built from your own answer history: questions you last got wrong come first, then near-misses one correct answer away from mastery, topped up with questions you haven’t seen yet. A question counts as mastered once you answer it right twice in a row.</p>'+
+    '<ul class="points">'+
+      '<li>'+wk.weak+' question'+(wk.weak===1?'':'s')+' currently need'+(wk.weak===1?'s':'')+' work (answered wrong at least once, not yet mastered).</li>'+
+      '<li>'+wk.m+' of '+TOTAL_Q+' mastered · '+wk.unseen+' never seen.</li>'+
+    '</ul>'+
+    '<div class="btnrow"><button class="btn" id="startdrill">Start drill · '+pool.length+' questions</button></div>'+
+    '<div class="note">Drill runs update per-question mastery but never overwrite a topic’s best quiz score.</div>';
+  $("#startdrill").onclick = ()=> startQuiz(weakPool(), "__drill", "Weak-spot drill", true);
+  renderNav();
+  window.scrollTo(0,0);
+}
+
+function showMixedIntro(){
+  const all = TOPICS.reduce((n,t)=>n+t.questions.length,0);
+  const b = state.best["__mixed"];
+  main.innerHTML =
+    '<div class="kicker">Mixed review</div>'+
+    '<h1>Mixed review</h1>'+
+    '<p class="summary">A random draw of '+MIXED_SIZE+' questions pulled from all '+TOPICS.length+' topics — '+all+' questions in the pool. A fresh set is shuffled every time you start, so use this once the individual topics feel solid.</p>'+
+    '<div class="btnrow"><button class="btn" id="startmixed">Start mixed review · '+MIXED_SIZE+' questions</button>'+
+    (b? '<span style="align-self:center;color:var(--muted);font-size:14px">Best: '+b.correct+'/'+b.total+' ('+pct("__mixed")+'%)</span>':'')+
+    '</div>';
+  $("#startmixed").onclick = ()=>{
+    const pool = [];
+    TOPICS.forEach(t=> t.questions.forEach(q=> pool.push(Object.assign({},q,{_topic:t.title}))));
+    startQuiz(shuffle(pool).slice(0,MIXED_SIZE), "__mixed", "Mixed review");
+  };
+  renderNav();
+  window.scrollTo(0,0);
+}
+
+function showDueIntro(){
+  const pool = duePool();
+  const nxt = nextDueAt();
+  let sub;
+  if(pool.length) sub = pool.length+' mastered question'+(pool.length===1?' is':'s are')+' due for a check today.';
+  else if(nxt) sub = 'Nothing due right now. Next review comes due '+new Date(nxt).toLocaleDateString(undefined,{weekday:'long', day:'numeric', month:'long'})+'.';
+  else sub = 'Nothing scheduled yet — master questions (2 right in a row) and they’ll come back here for review checks.';
+  main.innerHTML =
+    '<div class="kicker">Spaced review</div>'+
+    '<h1>📅 Due today</h1>'+
+    '<p class="summary">Mastery fades, so every mastered question comes back for a check: first after 3 days, then 1 week, 2 weeks, 1 month. Get it right and the next check moves further out; miss it and it drops straight back into the weak-spot drill.</p>'+
+    '<ul class="points"><li>'+esc(sub)+'</li></ul>'+
+    (pool.length? '<div class="btnrow"><button class="btn" id="startdue">Start review · '+pool.length+' question'+(pool.length===1?'':'s')+'</button></div>' : '')+
+    '<div class="note">Review runs update the schedule and mastery but never overwrite a topic’s best quiz score.</div>';
+  if(pool.length) $("#startdue").onclick = ()=> startQuiz(duePool(), "__due", "Due review", true);
+  renderNav();
+  window.scrollTo(0,0);
+}
+
+/* ============================================================
+   CONFUSABLES
+   ============================================================ */
+function showConfusables(){
+  let html = '<div class="kicker">Confusables</div><h1>⚖️ The classic mix-ups</h1>'+
+    '<p class="summary">These '+CONFUSABLES.length+' pairs cause most lost points in this material. Definitions below are verbatim from the slides — read them side by side, then run the rapid round: a definition flashes, you tap which concept it belongs to.</p>';
+  CONFUSABLES.forEach(c=>{
+    html += '<div class="cmp"><div class="cmphead">'+esc(c.title)+'</div><div class="cmpgrid">'+
+      '<div class="cmpcol"><div class="cmpname">'+esc(c.l.name)+'</div>'+c.l.lines.map(x=>'<div class="cmpline">'+esc(x)+'</div>').join("")+'</div>'+
+      '<div class="cmpcol"><div class="cmpname">'+esc(c.r.name)+'</div>'+c.r.lines.map(x=>'<div class="cmpline">'+esc(x)+'</div>').join("")+'</div>'+
+    '</div><div class="cmptip">'+esc(c.tip)+' <span style="opacity:.7">· Source: '+esc(c.src)+'</span></div></div>';
+  });
+  const rb = state.rapid;
+  html += '<div class="btnrow" style="margin-top:22px"><button class="btn" id="startrapid">Start rapid round · '+RAPID.length+' calls</button>'+
+    (rb? '<span style="align-self:center;color:var(--muted);font-size:14px">Best: '+rb.score+'/'+rb.total+' · '+Math.round(rb.ms/1000)+'s</span>':'')+'</div>';
+  main.innerHTML = html;
+  $("#startrapid").onclick = startRapid;
+  renderNav(); window.scrollTo(0,0);
+}
+
+let rapid = null;
+function startRapid(){
+  rapid = {items: shuffle(RAPID), i:0, right:0, misses:{}, t0: Date.now()};
+  renderRapid();
+  window.scrollTo(0,0);
+}
+function renderRapid(){
+  const it = rapid.items[rapid.i];
+  const c = CONFUSABLES.find(x=>x.id===it.cid);
+  main.innerHTML =
+    '<div class="qhead"><div class="kicker" style="margin:0">Rapid round</div>'+
+    '<div class="qcount">'+(rapid.i+1)+' of '+rapid.items.length+' · '+rapid.right+' right</div></div>'+
+    '<div class="qbar"><i style="width:'+Math.round(100*rapid.i/rapid.items.length)+'%"></i></div>'+
+    '<div class="qtype">Which is it?</div>'+
+    '<p class="qtext">“'+esc(it.text)+'”</p>'+
+    '<div class="opts">'+
+      '<button class="opt" data-s="L"><span class="key">1</span><span>'+esc(c.l.name)+'</span></button>'+
+      '<button class="opt" data-s="R"><span class="key">2</span><span>'+esc(c.r.name)+'</span></button>'+
+    '</div>';
+  main.querySelectorAll(".opt").forEach(b=>{
+    b.onclick = ()=>{
+      const ok = b.dataset.s === it.side;
+      if(ok) rapid.right++; else rapid.misses[it.cid] = (rapid.misses[it.cid]||0)+1;
+      main.querySelectorAll(".opt").forEach(x=>{
+        x.disabled = true;
+        if(x.dataset.s===it.side) x.classList.add("correct");
+        else if(x===b && !ok) x.classList.add("wrong");
+      });
+      setTimeout(()=>{ rapid.i++; rapid.i < rapid.items.length ? renderRapid() : rapidResult(); }, ok? 350 : 950);
+    };
+  });
+}
+function rapidResult(){
+  const ms = Date.now() - rapid.t0;
+  const total = rapid.items.length;
+  const prev = state.rapid;
+  if(!prev || rapid.right > prev.score || (rapid.right === prev.score && ms < prev.ms)){
+    state.rapid = {score: rapid.right, total: total, ms: ms}; save();
+  }
+  const missed = Object.keys(rapid.misses);
+  main.innerHTML = '<div class="result">'+
+    '<div class="score">'+rapid.right+'<span style="color:var(--muted);font-size:.5em">/'+total+'</span></div>'+
+    '<div class="pct">'+Math.round(ms/1000)+' seconds</div>'+
+    '<div class="msg">'+esc(missed.length? 'Mixed up: '+missed.map(id=>CONFUSABLES.find(c=>c.id===id).title).join(' · ')+'. Re-read those cards.' : 'Clean calls across the board.')+'</div>'+
+    '<div class="btnrow"><button class="btn" id="rapidagain">Run it again</button>'+
+    '<button class="btn ghost" id="rapidback">Back to the cards</button></div></div>';
+  $("#rapidagain").onclick = startRapid;
+  $("#rapidback").onclick = showConfusables;
+  renderNav(); window.scrollTo(0,0);
+}
+
+/* ============================================================
+   QUIZ ENGINE
+   ============================================================ */
+let quiz = null;
+
+function startQuiz(questions, id, title, isRetry){
+  stopExamTimer();
+  quiz = {qs:questions, i:0, correct:0, wrong:[], id:id, title:title, retry:!!isRetry};
+  renderQ();
+  window.scrollTo(0,0);
+}
+
+function renderQ(){
+  const q = quiz.qs[quiz.i];
+  const typeLabel = q.type==="mc" ? "Multiple choice" : q.type==="tf" ? "True or false" : "Fill in the blank";
+  const progress = Math.round(100*quiz.i/quiz.qs.length);
+
+  let body = "";
+  if(q.type==="mc"){
+    // Render options in shuffled order; data-i keeps the original index so
+    // scoring/highlighting stay correct and the answer isn't always "A".
+    const order = shuffle(q.opts.map((_,i)=>i));
+    body = '<div class="opts">'+ order.map((orig,pos)=>
+      '<button class="opt" data-i="'+orig+'"><span class="key">'+"ABCD"[pos]+'</span><span>'+esc(q.opts[orig])+'</span></button>'
+    ).join("") +'</div>';
+  } else if(q.type==="tf"){
+    body = '<div class="opts">'+
+      '<button class="opt" data-i="1"><span class="key">T</span><span>True</span></button>'+
+      '<button class="opt" data-i="0"><span class="key">F</span><span>False</span></button>'+
+    '</div>';
+  } else {
+    body = '<div class="fib"><input type="text" id="fibin" autocomplete="off" autocapitalize="off" '+
+      'spellcheck="false" placeholder="Type your answer…"><button class="btn" id="fibgo">Check</button></div>';
+  }
+
+  main.innerHTML =
+    '<div class="qhead"><div class="kicker" style="margin:0">'+esc(quiz.title)+(quiz.retry?" · retry":"")+'</div>'+
+    '<div class="qcount">Question '+(quiz.i+1)+' of '+quiz.qs.length+' · '+quiz.correct+' right</div></div>'+
+    '<div class="qbar"><i style="width:'+progress+'%"></i></div>'+
+    '<div class="qtype">'+typeLabel+'</div>'+
+    (q._topic? '<div style="color:var(--muted);font-size:13px;margin-bottom:6px">from: '+esc(q._topic)+'</div>' : '')+
+    '<p class="qtext">'+q.q+'</p>'+
+    body+
+    '<div id="fbslot"></div>';
+
+  if(q.type==="fib"){
+    const inp = $("#fibin");
+    inp.focus();
+    inp.addEventListener("keydown", e=>{ if(e.key==="Enter") checkFib(); });
+    $("#fibgo").onclick = checkFib;
+  } else {
+    main.querySelectorAll(".opt").forEach(btn=>{
+      btn.onclick = ()=> checkChoice(parseInt(btn.dataset.i,10));
+    });
+  }
+}
+
+function checkChoice(picked){
+  const q = quiz.qs[quiz.i];
+  const right = q.type==="tf" ? (q.a===true?1:0) : q.a;
+  const ok = picked===right;
+  main.querySelectorAll(".opt").forEach(b=>{
+    const i = parseInt(b.dataset.i,10);
+    b.disabled = true;
+    if(i===right) b.classList.add("correct");
+    else if(i===picked) b.classList.add("wrong");
+  });
+  finishQ(ok, q);
+}
+
+function checkFib(){
+  const q = quiz.qs[quiz.i];
+  const inp = $("#fibin");
+  const val = norm(inp.value);
+  if(!val) { inp.focus(); return; }
+  const ok = q.acc.some(a=> norm(a)===val);
+  inp.disabled = true;
+  $("#fibgo").disabled = true;
+  inp.style.borderColor = ok ? "var(--good)" : "var(--bad)";
+  finishQ(ok, q);
+}
+
+// Per-question mastery stats + spaced-review scheduling.
+// Every answer counts, in any mode. Mastered (streak 2) starts the review
+// clock; each further correct answer pushes the next check out one interval;
+// a miss resets streak AND schedule, dropping the question back into the drill.
+function recordAnswer(ok, q){
+  if(!q.qid) return null;
+  const stq = state.q[q.qid] || (state.q[q.qid] = {s:0,r:0,k:0});
+  stq.s++;
+  if(ok){
+    stq.r++; stq.k++;
+    if(stq.k === 2){ stq.iv = 0; stq.due = Date.now() + REVIEW_IVS[0]; }
+    else if(stq.k > 2){ stq.iv = Math.min((stq.iv||0)+1, REVIEW_IVS.length-1); stq.due = Date.now() + REVIEW_IVS[stq.iv]; }
+  } else {
+    stq.k = 0; delete stq.due; delete stq.iv;
+  }
+  save();
+  return stq;
+}
+
+function finishQ(ok, q){
+  if(ok) quiz.correct++; else quiz.wrong.push(q);
+
+  const stq = recordAnswer(ok, q);
+  let streakNote = "";
+  if(stq){
+    if(ok && stq.k===2) streakNote = " · mastered ✓ · review in "+ivLabel(0);
+    else if(ok && stq.k>2) streakNote = " · streak "+stq.k+" · next check in "+ivLabel(stq.iv);
+    else if(ok) streakNote = " · 1 more to master";
+    else if(stq.s>1) streakNote = " · streak reset";
+  }
+
+  let answerLine = "";
+  if(!ok){
+    if(q.type==="mc") answerLine = "Answer: "+q.opts[q.a]+". ";
+    else if(q.type==="tf") answerLine = "Answer: "+(q.a?"True":"False")+". ";
+    else answerLine = "Answer: "+q.acc[0]+". ";
+  }
+  const fb = document.createElement("div");
+  fb.className = "fb " + (ok?"ok":"no");
+  fb.innerHTML =
+    '<div class="verdict">'+(ok?"✓ Correct":"✗ Not quite")+esc(streakNote)+'</div>'+
+    '<div class="why">'+esc(answerLine)+esc(q.why)+'</div>'+
+    '<div class="src">Source: '+esc(q.src)+'</div>'+
+    '<div class="btnrow" style="margin-top:16px"><button class="btn" id="nextq">'+
+      (quiz.i+1 < quiz.qs.length ? "Next question" : "See results")+'</button></div>';
+  $("#fbslot").appendChild(fb);
+  $("#nextq").focus();
+  $("#nextq").onclick = ()=>{
+    quiz.i++;
+    if(quiz.i < quiz.qs.length) renderQ(); else showResult();
+  };
+  fb.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function showResult(){
+  const total = quiz.qs.length, c = quiz.correct;
+  const p = Math.round(100*c/total);
+
+  // Only a full (non-retry) run updates the recorded best score.
+  if(!quiz.retry){
+    const prev = state.best[quiz.id];
+    if(!prev || c/total > prev.correct/prev.total) state.best[quiz.id] = {correct:c,total:total};
+    save();
+  }
+
+  const msg = p===100 ? "Every question right. Nothing left to review here."
+    : p>=80 ? "Strong pass — tidy up the misses and you're done."
+    : p>=50 ? "Halfway there. Run the wrong ones back."
+    : "Worth re-reading the study sheet before another pass.";
+
+  let html = '<div class="result">'+
+    '<div class="score">'+c+'<span style="color:var(--muted);font-size:.5em">/'+total+'</span></div>'+
+    '<div class="pct">'+p+'%</div>'+
+    '<div class="msg">'+esc(msg)+'</div>'+
+    '<div class="btnrow">';
+  if(quiz.wrong.length){
+    const w = quiz.wrong.slice();
+    html += '<button class="btn" id="retrywrong">Retry '+w.length+' wrong '+(w.length===1?"answer":"answers")+'</button>';
+  }
+  html += (quiz.id==="__due" ? '' : '<button class="btn ghost" id="again">'+(quiz.id==="__drill"?"New drill":"Take it again")+'</button>')+
+          '<button class="btn ghost" id="back">'+(quiz.id.startsWith("__")?"Back":"Back to study sheet")+'</button>'+
+          '</div></div>';
+  main.innerHTML = html;
+
+  const wrongCopy = quiz.wrong.slice();
+  const qsCopy = quiz.qs.slice();
+  const id = quiz.id, title = quiz.title;
+
+  if($("#retrywrong")) $("#retrywrong").onclick = ()=> startQuiz(shuffle(wrongCopy), id, title, true);
+  if($("#again")) $("#again").onclick = ()=>{
+    if(id==="__mixed"){
+      const pool=[];
+      TOPICS.forEach(t=> t.questions.forEach(q=> pool.push(Object.assign({},q,{_topic:t.title}))));
+      startQuiz(shuffle(pool).slice(0,MIXED_SIZE), id, title);
+    } else if(id==="__drill"){
+      startQuiz(weakPool(), id, title, true);
+    } else startQuiz(qsCopy, id, title);
+  };
+  $("#back").onclick = ()=>
+    id==="__mixed" ? showMixedIntro() :
+    id==="__drill" ? showDrillIntro() :
+    id==="__due"   ? showDueIntro()   : showTopic(id);
+  renderNav();
+  window.scrollTo(0,0);
+}
+
+/* ============================================================
+   EXAM MODE — timed, no feedback until the end
+   ============================================================ */
+let exam = null, examTick = null;
+
+function stopExamTimer(){ if(examTick){ clearInterval(examTick); examTick = null; } }
+function fmtMs(ms){
+  const s = Math.max(0, Math.ceil(ms/1000));
+  return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+}
+function examPool(){
+  // At least 2 questions from every topic, random fill to EXAM_SIZE.
+  let picked = [];
+  const rest = [];
+  TOPICS.forEach(t=>{
+    const qs = shuffle(t.questions.map(q=>Object.assign({},q,{_topic:t.title})));
+    picked = picked.concat(qs.slice(0,2));
+    rest.push(...qs.slice(2));
+  });
+  picked = picked.concat(shuffle(rest).slice(0, Math.max(0, EXAM_SIZE - picked.length)));
+  return shuffle(picked).slice(0, EXAM_SIZE);
+}
+
+function showExamIntro(){
+  stopExamTimer();
+  const b = state.examBest;
+  main.innerHTML =
+    '<div class="kicker">Exam mode</div><h1>📝 Mock exam</h1>'+
+    '<p class="summary">'+EXAM_SIZE+' questions drawn from every topic, '+Math.round(EXAM_MS()/60000)+' minutes on the clock, and no feedback until the end — exam conditions. '+EXAM_PASS+'% is the pass mark. Every answer still counts toward per-question mastery, so misses land in the weak-spot drill.</p>'+
+    '<ul class="points">'+
+      '<li>At least 2 questions from each of the '+TOPICS.length+' topics; fill-ins lock on Enter.</li>'+
+      '<li>If time runs out, unanswered questions count as wrong.</li>'+
+      (b? '<li>Best so far: '+b.correct+'/'+b.total+' ('+Math.round(100*b.correct/b.total)+'%)'+(b.pass?' — a pass.':'.')+'</li>':'')+
+    '</ul>'+
+    '<div class="btnrow"><button class="btn" id="startexam">Start exam · '+EXAM_SIZE+' questions · '+Math.round(EXAM_MS()/60000)+' min</button></div>';
+  $("#startexam").onclick = startExam;
+  renderNav(); window.scrollTo(0,0);
+}
+
+function startExam(){
+  stopExamTimer();
+  exam = {qs: examPool(), i:0, answers:[], t0: Date.now(), end: Date.now()+EXAM_MS()};
+  examTick = setInterval(()=>{
+    const el = $("#examclock");
+    if(!el) return;                       // view changed; closeMenu clears us too
+    const left = exam.end - Date.now();
+    if(left <= 0){ finishExam(true); return; }
+    el.textContent = fmtMs(left);
+    el.parentElement.classList.toggle("low", left < 2*60*1000);
+  }, 250);
+  renderExamQ();
+  window.scrollTo(0,0);
+}
+
+function renderExamQ(){
+  const q = exam.qs[exam.i];
+  const typeLabel = q.type==="mc" ? "Multiple choice" : q.type==="tf" ? "True or false" : "Fill in the blank";
+  let body = "";
+  if(q.type==="mc"){
+    const order = shuffle(q.opts.map((_,i)=>i));
+    body = '<div class="opts">'+ order.map((orig,pos)=>
+      '<button class="opt" data-i="'+orig+'"><span class="key">'+"ABCD"[pos]+'</span><span>'+esc(q.opts[orig])+'</span></button>'
+    ).join("") +'</div>';
+  } else if(q.type==="tf"){
+    body = '<div class="opts">'+
+      '<button class="opt" data-i="1"><span class="key">T</span><span>True</span></button>'+
+      '<button class="opt" data-i="0"><span class="key">F</span><span>False</span></button>'+
+    '</div>';
+  } else {
+    body = '<div class="fib"><input type="text" id="fibin" autocomplete="off" autocapitalize="off" '+
+      'spellcheck="false" placeholder="Type your answer…"><button class="btn" id="fibgo">Lock in</button></div>';
+  }
+  main.innerHTML =
+    '<div class="examtimer"><span>📝 Mock exam · '+(exam.i+1)+' of '+exam.qs.length+'</span>'+
+    '<span id="examclock">'+fmtMs(exam.end-Date.now())+'</span></div>'+
+    '<div class="qbar"><i style="width:'+Math.round(100*exam.i/exam.qs.length)+'%"></i></div>'+
+    '<div class="qtype">'+typeLabel+'</div>'+
+    '<p class="qtext">'+q.q+'</p>'+
+    body;
+  if(q.type==="fib"){
+    const inp = $("#fibin");
+    inp.focus();
+    inp.addEventListener("keydown", e=>{ if(e.key==="Enter") examAnswer("fib"); });
+    $("#fibgo").onclick = ()=> examAnswer("fib");
+  } else {
+    main.querySelectorAll(".opt").forEach(btn=>{
+      btn.onclick = ()=> examAnswer(parseInt(btn.dataset.i,10));
+    });
+  }
+}
+
+function examAnswer(val){
+  const q = exam.qs[exam.i];
+  let ok, given;
+  if(val === "fib"){
+    const raw = $("#fibin").value;
+    if(!norm(raw)){ $("#fibin").focus(); return; }
+    ok = q.acc.some(a=> norm(a)===norm(raw));
+    given = raw.trim();
+  } else if(q.type==="tf"){
+    ok = val === (q.a?1:0); given = val? "True":"False";
+  } else {
+    ok = val === q.a; given = q.opts[val];
+  }
+  recordAnswer(ok, q);
+  exam.answers.push({q:q, ok:ok, given:given});
+  exam.i++;
+  if(exam.i < exam.qs.length) renderExamQ(); else finishExam(false);
+}
+
+function finishExam(expired){
+  stopExamTimer();
+  const unanswered = exam.qs.slice(exam.answers.length);
+  unanswered.forEach(q=>{ recordAnswer(false, q); exam.answers.push({q:q, ok:false, given:null}); });
+
+  const total = exam.qs.length;
+  const c = exam.answers.filter(a=>a.ok).length;
+  const p = Math.round(100*c/total);
+  const pass = p >= EXAM_PASS;
+  const prev = state.examBest;
+  if(!prev || c > prev.correct) state.examBest = {correct:c, total:total, pass:pass};
+  save();
+
+  let html = '<div class="result">'+
+    '<div class="score">'+c+'<span style="color:var(--muted);font-size:.5em">/'+total+'</span></div>'+
+    '<div class="pct" style="color:'+(pass?"var(--good)":"var(--bad)")+'">'+p+'% — '+(pass?"PASS":"below the "+EXAM_PASS+"% pass mark")+'</div>'+
+    '<div class="msg">'+(expired? "Time ran out — unanswered questions counted as wrong. ":"")+'Time used: '+fmtMs(Date.now()-exam.t0)+'.</div>'+
+    '<div class="btnrow">'+
+      (c<total? '<button class="btn" id="examdrill">Drill the '+(total-c)+' miss'+(total-c===1?"":"es")+'</button>':'')+
+      '<button class="btn ghost" id="examagain">New exam</button>'+
+      '<button class="btn ghost" id="examback">Back</button>'+
+    '</div>'+
+    '<h2 style="margin-top:34px;text-align:left">Answer review</h2>';
+  exam.answers.forEach((a,i)=>{
+    const q = a.q;
+    const correctText = q.type==="mc" ? q.opts[q.a] : q.type==="tf" ? (q.a?"True":"False") : q.acc[0];
+    html += '<div class="rev" style="text-align:left"><div class="rq">'+(i+1)+'. '+q.q+'</div>'+
+      '<div class="ra '+(a.ok?"good":"bad")+'">'+
+        (a.ok ? '✓ '+esc(correctText)
+              : '✗ Your answer: '+esc(a.given===null? "— (not answered)" : a.given)+' — correct: '+esc(correctText))+'</div>'+
+      (a.ok? '' : '<div class="why">'+esc(q.why)+'</div>')+
+      '<div class="src">'+(q._topic? esc(q._topic)+' · ':'')+'Source: '+esc(q.src)+'</div></div>';
+  });
+  html += '</div>';
+  main.innerHTML = html;
+
+  const missed = exam.answers.filter(a=>!a.ok).map(a=>a.q);
+  if($("#examdrill")) $("#examdrill").onclick = ()=> startQuiz(shuffle(missed), "__drill", "Exam misses", true);
+  $("#examagain").onclick = startExam;
+  $("#examback").onclick = showExamIntro;
+  renderNav(); window.scrollTo(0,0);
+}
+
+/* ============================================================
+   BOOT — land on the review queue if anything is due
+   ============================================================ */
+if(duePool().length){ current = "__due"; showDueIntro(); }
+else showTopic(TOPICS[0].id);
+</script>
+</body>
+</html>
