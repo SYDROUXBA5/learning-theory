@@ -158,6 +158,12 @@
     .qtext{font-size:19px;}
     .result .score{font-size:52px;}
   }
+  /* ---------- scope selector ---------- */
+  .scoperow{display:flex;gap:10px;align-items:center;margin:16px 0 4px;color:var(--muted);font-size:14px;flex-wrap:wrap;}
+  .scopesel{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;
+    padding:9px 12px;font:inherit;font-size:14px;max-width:100%;}
+  .scopesel:focus{outline:none;border-color:var(--accent);}
+
   /* ---------- confusables ---------- */
   .cmp{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin:14px 0;}
   .cmphead{font-weight:700;margin-bottom:10px;}
@@ -514,7 +520,12 @@ const TOTAL_Q = TOPICS.reduce((n,t) => n + t.questions.length, 0);
 const REVIEW_IVS = [3,7,14,30].map(d => d*24*60*60*1000);
 function ivLabel(i){ return ["3 days","1 week","2 weeks","1 month"][Math.min(i, REVIEW_IVS.length-1)]; }
 const EXAM_SIZE = 30, EXAM_PASS = 80;
-const EXAM_MS = () => window.__examMs || 20*60*1000;   // override hook for testing
+function examDuration(n, scope){
+  if(window.__examMs) return window.__examMs;            // test override
+  return (scope && scope!=="__all")
+    ? Math.max(2, Math.round(n*40/60))*60*1000           // single topic: ~40s per question
+    : 20*60*1000;                                        // full deck: 20 minutes
+}
 
 /* ============================================================
    CONFUSABLES — verbatim slide definitions, side by side
@@ -590,6 +601,7 @@ function load(){
   }catch(e){}
   if(!s) s = {best:{},seen:{}};
   if(!s.q) s.q = {};   // per-question stats: {qid:{s:seen, r:right, k:streak}}
+  if(!s.scope) s.scope = {mixed:"__all", drill:"__all", exam:"__all"};
   return s;
 }
 function save(){
@@ -641,11 +653,12 @@ function weakCounts(){
   TOPICS.forEach(t => { const tm = topicMastery(t); m += tm.m; weak += tm.weak; unseen += tm.unseen; });
   return {m, weak, unseen};
 }
-function weakPool(){
+function weakPool(scope){
   // Last-answer-wrong first, then near-misses with an error history,
-  // topped up with never-seen questions.
+  // topped up with never-seen questions. Scope: "__all" or a topic id.
+  const src = (!scope || scope==="__all") ? TOPICS : TOPICS.filter(t => t.id===scope);
   const a = [], b = [], c = [];
-  TOPICS.forEach(t => t.questions.forEach(q => {
+  src.forEach(t => t.questions.forEach(q => {
     const s = state.q[q.qid];
     const qq = Object.assign({}, q, {_topic: t.title});
     if(!s || !s.s) c.push(qq);
@@ -671,6 +684,21 @@ function nextDueAt(){
     if(s && s.k >= 2 && s.due && (min === null || s.due < min)) min = s.due;
   }));
   return min;
+}
+
+/* ---- topic scoping for mixed / drill / exam ---- */
+function scopeOf(id){ return id.includes(":") ? id.slice(id.indexOf(":")+1) : "__all"; }
+function topicScopeSelect(selId, sel){
+  return '<select id="'+selId+'" class="scopesel">'+
+    '<option value="__all"'+(sel==="__all"?" selected":"")+'>All topics</option>'+
+    TOPICS.map(t=>'<option value="'+t.id+'"'+(sel===t.id?" selected":"")+'>'+esc(t.title)+'</option>').join("")+
+    '</select>';
+}
+function drawMixed(scope){
+  const src = (!scope || scope==="__all") ? TOPICS : TOPICS.filter(t => t.id===scope);
+  const pool = [];
+  src.forEach(t=> t.questions.forEach(q=> pool.push(Object.assign({},q,{_topic:t.title}))));
+  return shuffle(pool).slice(0, MIXED_SIZE);
 }
 
 /* ============================================================
@@ -751,7 +779,7 @@ function closeMenu(){ stopExamTimer(); $("#aside").classList.remove("open"); win
 $("#menutoggle").onclick = ()=> $("#aside").classList.toggle("open");
 $("#resetbtn").onclick = ()=>{
   if(confirm("Reset all quiz scores, mastery stats and progress?")){
-    state = {best:{},seen:{},q:{}}; save();
+    state = {best:{},seen:{},q:{},scope:{mixed:"__all",drill:"__all",exam:"__all"}}; save();
     current = TOPICS[0].id;
     renderNav(); showTopic(current);
   }
@@ -804,38 +832,48 @@ function showTopic(id){
 }
 
 function showDrillIntro(){
-  const wk = weakCounts();
-  const pool = weakPool();
+  const scope = state.scope.drill || "__all";
+  const st = scope==="__all" ? null : TOPICS.find(t=>t.id===scope);
+  const wk = st ? topicMastery(st) : weakCounts();
+  const totalQ = st ? st.questions.length : TOTAL_Q;
+  const pool = weakPool(scope);
   main.innerHTML =
     '<div class="kicker">Weak-spot drill</div>'+
     '<h1>Drill my weakest</h1>'+
     '<p class="summary">A focused set built from your own answer history: questions you last got wrong come first, then near-misses one correct answer away from mastery, topped up with questions you haven’t seen yet. A question counts as mastered once you answer it right twice in a row.</p>'+
+    '<div class="scoperow"><span>Questions from:</span>'+topicScopeSelect("drillscope", scope)+'</div>'+
     '<ul class="points">'+
       '<li>'+wk.weak+' question'+(wk.weak===1?'':'s')+' currently need'+(wk.weak===1?'s':'')+' work (answered wrong at least once, not yet mastered).</li>'+
-      '<li>'+wk.m+' of '+TOTAL_Q+' mastered · '+wk.unseen+' never seen.</li>'+
+      '<li>'+wk.m+' of '+totalQ+' mastered · '+wk.unseen+' never seen'+(st? ' in this topic':'')+'.</li>'+
     '</ul>'+
-    '<div class="btnrow"><button class="btn" id="startdrill">Start drill · '+pool.length+' questions</button></div>'+
+    '<div class="btnrow"><button class="btn" id="startdrill"'+(pool.length?'':' disabled')+'>Start drill · '+pool.length+' question'+(pool.length===1?'':'s')+'</button></div>'+
     '<div class="note">Drill runs update per-question mastery but never overwrite a topic’s best quiz score.</div>';
-  $("#startdrill").onclick = ()=> startQuiz(weakPool(), "__drill", "Weak-spot drill", true);
+  $("#drillscope").onchange = e=>{ state.scope.drill = e.target.value; save(); showDrillIntro(); };
+  $("#startdrill").onclick = ()=> startQuiz(weakPool(scope),
+    scope==="__all" ? "__drill" : "__drill:"+scope,
+    "Weak-spot drill"+(st? " · "+st.title : ""), true);
   renderNav();
   window.scrollTo(0,0);
 }
 
 function showMixedIntro(){
-  const all = TOPICS.reduce((n,t)=>n+t.questions.length,0);
-  const b = state.best["__mixed"];
+  const scope = state.scope.mixed || "__all";
+  const st = scope==="__all" ? null : TOPICS.find(t=>t.id===scope);
+  const n = st ? Math.min(MIXED_SIZE, st.questions.length) : MIXED_SIZE;
+  const bkey = st ? "__mixed:"+scope : "__mixed";
+  const b = state.best[bkey];
   main.innerHTML =
     '<div class="kicker">Mixed review</div>'+
     '<h1>Mixed review</h1>'+
-    '<p class="summary">A random draw of '+MIXED_SIZE+' questions pulled from all '+TOPICS.length+' topics — '+all+' questions in the pool. A fresh set is shuffled every time you start, so use this once the individual topics feel solid.</p>'+
-    '<div class="btnrow"><button class="btn" id="startmixed">Start mixed review · '+MIXED_SIZE+' questions</button>'+
-    (b? '<span style="align-self:center;color:var(--muted);font-size:14px">Best: '+b.correct+'/'+b.total+' ('+pct("__mixed")+'%)</span>':'')+
+    '<p class="summary">'+(st
+      ? 'All '+st.questions.length+' questions from “'+esc(st.title)+'”, freshly shuffled every run — question order and answer positions never sit still.'
+      : 'A random draw of '+MIXED_SIZE+' questions pulled from all '+TOPICS.length+' topics — '+TOTAL_Q+' questions in the pool. A fresh set is shuffled every time you start, so use this once the individual topics feel solid.')+'</p>'+
+    '<div class="scoperow"><span>Questions from:</span>'+topicScopeSelect("mixscope", scope)+'</div>'+
+    '<div class="btnrow"><button class="btn" id="startmixed">Start · '+n+' question'+(n===1?'':'s')+'</button>'+
+    (b? '<span style="align-self:center;color:var(--muted);font-size:14px">Best: '+b.correct+'/'+b.total+' ('+pct(bkey)+'%)</span>':'')+
     '</div>';
-  $("#startmixed").onclick = ()=>{
-    const pool = [];
-    TOPICS.forEach(t=> t.questions.forEach(q=> pool.push(Object.assign({},q,{_topic:t.title}))));
-    startQuiz(shuffle(pool).slice(0,MIXED_SIZE), "__mixed", "Mixed review");
-  };
+  $("#mixscope").onchange = e=>{ state.scope.mixed = e.target.value; save(); showMixedIntro(); };
+  $("#startmixed").onclick = ()=> startQuiz(drawMixed(scope), bkey, "Mixed review"+(st? " · "+st.title : ""));
   renderNav();
   window.scrollTo(0,0);
 }
@@ -1091,7 +1129,7 @@ function showResult(){
     const w = quiz.wrong.slice();
     html += '<button class="btn" id="retrywrong">Retry '+w.length+' wrong '+(w.length===1?"answer":"answers")+'</button>';
   }
-  html += (quiz.id==="__due" ? '' : '<button class="btn ghost" id="again">'+(quiz.id==="__drill"?"New drill":"Take it again")+'</button>')+
+  html += (quiz.id==="__due" ? '' : '<button class="btn ghost" id="again">'+(quiz.id.startsWith("__drill")?"New drill":"Take it again")+'</button>')+
           '<button class="btn ghost" id="back">'+(quiz.id.startsWith("__")?"Back":"Back to study sheet")+'</button>'+
           '</div></div>';
   main.innerHTML = html;
@@ -1102,18 +1140,14 @@ function showResult(){
 
   if($("#retrywrong")) $("#retrywrong").onclick = ()=> startQuiz(shuffle(wrongCopy), id, title, true);
   if($("#again")) $("#again").onclick = ()=>{
-    if(id==="__mixed"){
-      const pool=[];
-      TOPICS.forEach(t=> t.questions.forEach(q=> pool.push(Object.assign({},q,{_topic:t.title}))));
-      startQuiz(shuffle(pool).slice(0,MIXED_SIZE), id, title);
-    } else if(id==="__drill"){
-      startQuiz(weakPool(), id, title, true);
-    } else startQuiz(qsCopy, id, title);
+    if(id.startsWith("__mixed")) startQuiz(drawMixed(scopeOf(id)), id, title);
+    else if(id.startsWith("__drill")) startQuiz(weakPool(scopeOf(id)), id, title, true);
+    else startQuiz(qsCopy, id, title);
   };
   $("#back").onclick = ()=>
-    id==="__mixed" ? showMixedIntro() :
-    id==="__drill" ? showDrillIntro() :
-    id==="__due"   ? showDueIntro()   : showTopic(id);
+    id.startsWith("__mixed") ? showMixedIntro() :
+    id.startsWith("__drill") ? showDrillIntro() :
+    id==="__due" ? showDueIntro() : showTopic(id);
   renderNav();
   window.scrollTo(0,0);
 }
@@ -1128,7 +1162,11 @@ function fmtMs(ms){
   const s = Math.max(0, Math.ceil(ms/1000));
   return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
 }
-function examPool(){
+function examPool(scope){
+  if(scope && scope!=="__all"){
+    const t = TOPICS.find(x=>x.id===scope);
+    return shuffle(t.questions.map(q=>Object.assign({},q,{_topic:t.title})));
+  }
   // At least 2 questions from every topic, random fill to EXAM_SIZE.
   let picked = [];
   const rest = [];
@@ -1143,23 +1181,35 @@ function examPool(){
 
 function showExamIntro(){
   stopExamTimer();
+  const scope = state.scope.exam || "__all";
+  const st = scope==="__all" ? null : TOPICS.find(t=>t.id===scope);
+  const n = st ? st.questions.length : EXAM_SIZE;
+  const mins = Math.round(examDuration(n, scope)/60000);
   const b = state.examBest;
   main.innerHTML =
     '<div class="kicker">Exam mode</div><h1>📝 Mock exam</h1>'+
-    '<p class="summary">'+EXAM_SIZE+' questions drawn from every topic, '+Math.round(EXAM_MS()/60000)+' minutes on the clock, and no feedback until the end — exam conditions. '+EXAM_PASS+'% is the pass mark. Every answer still counts toward per-question mastery, so misses land in the weak-spot drill.</p>'+
+    '<p class="summary">'+(st
+      ? 'Every question from “'+esc(st.title)+'” under exam conditions — '+mins+' minutes on the clock, no feedback until the end.'
+      : EXAM_SIZE+' questions drawn from every topic, '+mins+' minutes on the clock, and no feedback until the end — exam conditions.')+
+      ' '+EXAM_PASS+'% is the pass mark. Every answer still counts toward per-question mastery, so misses land in the weak-spot drill.</p>'+
+    '<div class="scoperow"><span>Questions from:</span>'+topicScopeSelect("examscope", scope)+'</div>'+
     '<ul class="points">'+
-      '<li>At least 2 questions from each of the '+TOPICS.length+' topics; fill-ins lock on Enter.</li>'+
+      (st? '<li>All '+n+' questions of the topic, shuffled; fill-ins lock on Enter.</li>'
+         : '<li>At least 2 questions from each of the '+TOPICS.length+' topics; fill-ins lock on Enter.</li>')+
       '<li>If time runs out, unanswered questions count as wrong.</li>'+
-      (b? '<li>Best so far: '+b.correct+'/'+b.total+' ('+Math.round(100*b.correct/b.total)+'%)'+(b.pass?' — a pass.':'.')+'</li>':'')+
+      (b? '<li>Best full-deck exam: '+b.correct+'/'+b.total+' ('+Math.round(100*b.correct/b.total)+'%)'+(b.pass?' — a pass.':'.')+'</li>':'')+
     '</ul>'+
-    '<div class="btnrow"><button class="btn" id="startexam">Start exam · '+EXAM_SIZE+' questions · '+Math.round(EXAM_MS()/60000)+' min</button></div>';
-  $("#startexam").onclick = startExam;
+    '<div class="btnrow"><button class="btn" id="startexam">Start exam · '+n+' questions · '+mins+' min</button></div>';
+  $("#examscope").onchange = e=>{ state.scope.exam = e.target.value; save(); showExamIntro(); };
+  $("#startexam").onclick = ()=> startExam(scope);
   renderNav(); window.scrollTo(0,0);
 }
 
-function startExam(){
+function startExam(scope){
   stopExamTimer();
-  exam = {qs: examPool(), i:0, answers:[], t0: Date.now(), end: Date.now()+EXAM_MS()};
+  scope = scope || "__all";
+  const pool = examPool(scope);
+  exam = {qs: pool, i:0, answers:[], scope: scope, t0: Date.now(), end: Date.now()+examDuration(pool.length, scope)};
   examTick = setInterval(()=>{
     const el = $("#examclock");
     if(!el) return;                       // view changed; closeMenu clears us too
@@ -1238,7 +1288,8 @@ function finishExam(expired){
   const p = Math.round(100*c/total);
   const pass = p >= EXAM_PASS;
   const prev = state.examBest;
-  if(!prev || c > prev.correct) state.examBest = {correct:c, total:total, pass:pass};
+  // Only full-deck exams set the record — a single-topic run isn't comparable.
+  if(exam.scope==="__all" && (!prev || c > prev.correct)) state.examBest = {correct:c, total:total, pass:pass};
   save();
 
   let html = '<div class="result">'+
@@ -1266,7 +1317,7 @@ function finishExam(expired){
 
   const missed = exam.answers.filter(a=>!a.ok).map(a=>a.q);
   if($("#examdrill")) $("#examdrill").onclick = ()=> startQuiz(shuffle(missed), "__drill", "Exam misses", true);
-  $("#examagain").onclick = startExam;
+  $("#examagain").onclick = ()=> startExam(exam.scope);
   $("#examback").onclick = showExamIntro;
   renderNav(); window.scrollTo(0,0);
 }
