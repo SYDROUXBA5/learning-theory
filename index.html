@@ -431,6 +431,26 @@
   .scopesel:hover{border-color:var(--acc-line);}
   .scopesel:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(62,203,224,.15);}
 
+  /* ================= DIFFICULTY ================= */
+  .diffrow{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin:20px 0 2px;}
+  .difflabel{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);}
+  .diffseg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;}
+  .diffseg button{
+    font:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);
+    background:transparent;border:none;border-radius:8px;padding:6px 15px;transition:background .15s,color .15s;
+  }
+  .diffseg button:hover{color:var(--text);}
+  .diffseg button.on{background:var(--grad);color:var(--acc-ink);}
+  .diffhint{font-size:12.5px;color:var(--muted);flex-basis:100%;line-height:1.4;}
+  .hintbtn{
+    margin-top:13px;background:transparent;border:1px dashed var(--line2);color:var(--muted);
+    font:inherit;font-size:13px;font-weight:600;cursor:pointer;border-radius:10px;padding:9px 15px;
+    transition:border-color .15s,color .15s;
+  }
+  .hintbtn:hover:not(:disabled){border-color:var(--acc);color:var(--acc);}
+  .hintbtn:disabled{opacity:.35;cursor:default;}
+  .opt.dimmed{opacity:.3;text-decoration:line-through;pointer-events:none;}
+
   /* ================= CONFUSABLES ================= */
   .cmp{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin:14px 0;}
   .cmphead{font-family:var(--serif);font-weight:700;font-size:18px;margin-bottom:12px;letter-spacing:-.01em;}
@@ -936,7 +956,8 @@ function blankState(){
   return {
     best:{}, seen:{}, q:{},
     scope:{mixed:"__all", drill:"__all", exam:"__all"},
-    xp:{p:0, day:null, streak:0, best:0, hist:[]}
+    xp:{p:0, day:null, streak:0, best:0, hist:[]},
+    diff:"medium"
   };
 }
 function load(id){
@@ -951,6 +972,7 @@ function load(id){
   if(!s.best) s.best = d.best;
   if(!s.scope) s.scope = d.scope;
   if(!s.xp) s.xp = d.xp;
+  if(!s.diff) s.diff = d.diff;
   return s;
 }
 function save(){
@@ -1475,6 +1497,7 @@ function showTopic(id){
       +(tm.unseen? ' · '+tm.unseen+' unseen':'')
     : null;
   const meta = [b? 'Best run: '+b.correct+'/'+b.total : null, mline].filter(Boolean).join('  ·  ');
+  html += diffRow();
   html += '<div class="btnrow">'+
     '<button class="btn" id="startquiz">'+(b?"Retake quiz":"Start quiz")+' · '+t.questions.length+' questions</button>'+
     (meta? '<span style="align-self:center;color:var(--muted);font-size:14px">'+meta+'</span>':'')+
@@ -1484,6 +1507,7 @@ function showTopic(id){
 
   main.innerHTML = html;
   $("#startquiz").onclick = ()=> startQuiz(t.questions, t.id, t.title);
+  wireDiff(()=>showTopic(id));
   renderNav();
   window.scrollTo(0,0);
 }
@@ -1503,12 +1527,14 @@ function showDrillIntro(){
       '<li>'+wk.weak+' question'+(wk.weak===1?'':'s')+' currently need'+(wk.weak===1?'s':'')+' work (answered wrong at least once, not yet mastered).</li>'+
       '<li>'+wk.m+' of '+totalQ+' mastered · '+wk.unseen+' never seen'+(st? ' in this topic':'')+'.</li>'+
     '</ul>'+
+    diffRow()+
     '<div class="btnrow"><button class="btn" id="startdrill"'+(pool.length?'':' disabled')+'>Start drill · '+pool.length+' question'+(pool.length===1?'':'s')+'</button></div>'+
     '<div class="note">Drill runs update per-question mastery but never overwrite a topic’s best quiz score.</div>';
   $("#drillscope").onchange = e=>{ state.scope.drill = e.target.value; save(); showDrillIntro(); };
   $("#startdrill").onclick = ()=> startQuiz(weakPool(scope),
     scope==="__all" ? "__drill" : "__drill:"+scope,
     "Weak-spot drill"+(st? " · "+st.title : ""), true);
+  wireDiff(showDrillIntro);
   renderNav();
   window.scrollTo(0,0);
 }
@@ -1526,11 +1552,13 @@ function showMixedIntro(){
       ? 'All '+st.questions.length+' questions from “'+esc(st.title)+'”, freshly shuffled every run — question order and answer positions never sit still.'
       : 'A random draw of '+MIXED_SIZE+' questions pulled from all '+TOPICS.length+' topics — '+TOTAL_Q+' questions in the pool. A fresh set is shuffled every time you start, so use this once the individual topics feel solid.')+'</p>'+
     '<div class="scoperow"><span>Questions from:</span>'+topicScopeSelect("mixscope", scope)+'</div>'+
+    diffRow()+
     '<div class="btnrow"><button class="btn" id="startmixed">Start · '+n+' question'+(n===1?'':'s')+'</button>'+
     (b? '<span style="align-self:center;color:var(--muted);font-size:14px">Best: '+b.correct+'/'+b.total+' ('+pct(bkey)+'%)</span>':'')+
     '</div>';
   $("#mixscope").onchange = e=>{ state.scope.mixed = e.target.value; save(); showMixedIntro(); };
   $("#startmixed").onclick = ()=> startQuiz(drawMixed(scope), bkey, "Mixed review"+(st? " · "+st.title : ""));
+  wireDiff(showMixedIntro);
   renderNav();
   window.scrollTo(0,0);
 }
@@ -1547,9 +1575,13 @@ function showDueIntro(){
     '<h1>📅 Due today</h1>'+
     '<p class="summary">Mastery fades, so every mastered question comes back for a check: first after 3 days, then 1 week, 2 weeks, 1 month. Get it right and the next check moves further out; miss it and it drops straight back into the weak-spot drill.</p>'+
     '<ul class="points"><li>'+esc(sub)+'</li></ul>'+
+    (pool.length? diffRow() : '')+
     (pool.length? '<div class="btnrow"><button class="btn" id="startdue">Start review · '+pool.length+' question'+(pool.length===1?'':'s')+'</button></div>' : '')+
     '<div class="note">Review runs update the schedule and mastery but never overwrite a topic’s best quiz score.</div>';
-  if(pool.length) $("#startdue").onclick = ()=> startQuiz(duePool(), "__due", "Due review", true);
+  if(pool.length){
+    $("#startdue").onclick = ()=> startQuiz(duePool(), "__due", "Due review", true);
+    wireDiff(showDueIntro);
+  }
   renderNav();
   window.scrollTo(0,0);
 }
@@ -1853,9 +1885,132 @@ function showMap(){
    ============================================================ */
 let quiz = null;
 
+/* ============================================================
+   DIFFICULTY — Easy / Medium / Hard.
+   Never changes the facts, only recognition vs. recall:
+   · Easy   — fill-ins become multiple-choice (distractors are
+              REAL terms from the deck, never invented) + a hint.
+   · Medium — the deck exactly as authored.
+   · Hard   — direct-answer questions become type-the-answer recall.
+   ============================================================ */
+const DIFF_HINT = {
+  easy:   "Multiple-choice only, with a hint button — recognition, not recall.",
+  medium: "The deck exactly as written — a mix of choice, true/false and fill-in.",
+  hard:   "Direct questions turn into type-the-answer recall. No hints."
+};
+const TI = Object.fromEntries(TOPICS.map((t,i)=>[t.id,i]));
+function qTopicIndex(q){ const k=(q.qid||"").split("#")[0]; return (k in TI)?TI[k]:-1; }
+function isShortTerm(s){ const w=String(s).trim(); return w.length<=30 && w.split(/\s+/).length<=4; }
+
+// Pool of real, short answer terms from the whole deck — the only source
+// of wrong options in Easy mode, so nothing is ever fabricated.
+let DISTRACTORS = null;
+function distractorPool(){
+  if(DISTRACTORS) return DISTRACTORS;
+  const seen = new Set(); DISTRACTORS = [];
+  TOPICS.forEach((t, ti)=> t.questions.forEach(q=>{
+    const terms = q.type==="mc" ? q.opts : q.type==="fib" ? [q.acc[0]] : [];
+    terms.forEach(term=>{
+      if(!isShortTerm(term)) return;
+      const key = norm(term);
+      if(!key || seen.has(key)) return;
+      seen.add(key); DISTRACTORS.push({term, ti, key});
+    });
+  }));
+  return DISTRACTORS;
+}
+function relatedWord(a, b){          // near-duplicate guard (pavlov / pavlovian)
+  const x = norm(a), y = norm(b);
+  return x===y || (x.length>3 && y.length>3 && (x.includes(y) || y.includes(x)));
+}
+
+// Answers of the OTHER fill-ins in the same topic. The deck deliberately gives
+// synonym pairs (Pavlovian/respondent, escape/avoidance), so a sibling's answer
+// can be a true completion of this blank too — never use one as a wrong option.
+let FIB_TOPIC = null;
+function fibAnswersByTopic(){
+  if(FIB_TOPIC) return FIB_TOPIC;
+  FIB_TOPIC = {};
+  TOPICS.forEach((t, ti)=>{
+    FIB_TOPIC[ti] = t.questions.filter(q=>q.type==="fib").map(q=>({qid:q.qid, accs:q.acc.map(norm)}));
+  });
+  return FIB_TOPIC;
+}
+
+function mcFromFib(q){
+  const answer = q.acc[0];
+  if(!isShortTerm(answer)) return null;
+  const banned = q.acc.map(norm);
+  const ti = qTopicIndex(q);
+  (fibAnswersByTopic()[ti] || []).forEach(f=>{
+    if(f.qid !== q.qid) f.accs.forEach(a=> banned.push(a));   // exclude sibling fill-in answers
+  });
+  const pool = distractorPool().filter(d =>
+    !banned.includes(d.key) && !q.acc.some(a=>relatedWord(a, d.term)));
+  const near = shuffle(pool.filter(d=>d.ti===ti));
+  const far  = shuffle(pool.filter(d=>d.ti!==ti));
+  const picks = [];
+  [...near, ...far].forEach(d=>{
+    if(picks.length>=3) return;
+    if(picks.some(p=>relatedWord(p, d.term))) return;
+    picks.push(d.term);
+  });
+  if(picks.length < 3) return null;                    // not enough clean distractors → leave as fib
+  const opts = shuffle([answer, ...picks]);
+  return Object.assign({}, q, {type:"mc", opts, a: opts.indexOf(answer)});
+}
+
+const DIRECT_MC = /\?\s*$/;
+const LIST_MC = /\b(these|following|which two|listed|appear|except|not one|is not|are indented)\b/i;
+function fibFromMc(q){
+  const ans = q.opts[q.a];
+  if(!DIRECT_MC.test(q.q) || LIST_MC.test(q.q)) return null;
+  const words = ans.trim().split(/\s+/);
+  if(words.length>2 || ans.length>24 || /[^A-Za-z\s-]/.test(ans)) return null;   // no names w/ dots, numbers, phrases
+  const acc = [ans];
+  const noArt = ans.replace(/^(the|a|an)\s+/i, "");
+  if(!acc.includes(noArt)) acc.push(noArt);
+  const last = words[words.length-1];                  // accept the surname / key word alone
+  if(words.length>1 && last.length>=4 && !acc.some(a=>norm(a)===norm(last))) acc.push(last);
+  return Object.assign({}, q, {type:"fib", acc});
+}
+
+// Transform a question list for a difficulty. Idempotent: each copy carries
+// its original as _orig, so re-running (retry, "again") re-derives cleanly.
+function applyDifficulty(list, diff){
+  return list.map(item=>{
+    const orig = item._orig || item;
+    const base = Object.assign({}, orig, {_orig:orig, _topic:item._topic || orig._topic});
+    if(diff==="easy" && orig.type==="fib"){
+      const m = mcFromFib(base); if(m){ m._orig=orig; m._topic=base._topic; return m; }
+    }
+    if(diff==="hard" && orig.type==="mc"){
+      const f = fibFromMc(base); if(f){ f._orig=orig; f._topic=base._topic; return f; }
+    }
+    return base;
+  });
+}
+
+function diffRow(){
+  const d = state.diff || "medium";
+  return '<div class="diffrow"><span class="difflabel">Difficulty</span>'+
+    '<div class="diffseg" id="diffseg">'+
+    ["easy","medium","hard"].map(x=>
+      '<button data-d="'+x+'"'+(x===d?' class="on"':'')+'>'+x[0].toUpperCase()+x.slice(1)+'</button>').join("")+
+    '</div><span class="diffhint">'+DIFF_HINT[d]+'</span></div>';
+}
+function wireDiff(rerender){
+  const seg = $("#diffseg"); if(!seg) return;
+  seg.querySelectorAll("button").forEach(b=> b.onclick = ()=>{
+    if(state.diff === b.dataset.d) return;
+    state.diff = b.dataset.d; save(); rerender();
+  });
+}
+
 function startQuiz(questions, id, title, isRetry){
   stopExamTimer();
-  quiz = {qs:questions, i:0, correct:0, wrong:[], id:id, title:title, retry:!!isRetry};
+  const diff = state.diff || "medium";
+  quiz = {qs: applyDifficulty(questions, diff), i:0, correct:0, wrong:[], id:id, title:title, retry:!!isRetry, diff:diff};
   renderQ();
   window.scrollTo(0,0);
 }
@@ -1891,6 +2046,8 @@ function renderQ(){
     (q._topic? '<div style="color:var(--muted);font-size:13px;margin-bottom:6px">from: '+esc(q._topic)+'</div>' : '')+
     '<p class="qtext">'+q.q+'</p>'+
     body+
+    (quiz.diff==="easy" && q.type==="mc" && q.opts.length>2
+      ? '<button class="hintbtn" id="hintbtn">💡 Hint · remove a wrong answer</button>' : '')+
     '<div id="fbslot"></div>';
 
   if(q.type==="fib"){
@@ -1903,6 +2060,17 @@ function renderQ(){
       btn.onclick = ()=> checkChoice(parseInt(btn.dataset.i,10));
     });
   }
+
+  if($("#hintbtn")) $("#hintbtn").onclick = ()=>{
+    // Dim one still-standing wrong option; never touch the correct one,
+    // never drop below two choices.
+    const live = [...main.querySelectorAll(".opt")].filter(b=>
+      !b.classList.contains("dimmed") && parseInt(b.dataset.i,10) !== q.a);
+    if(live.length <= 1) return;
+    const pick = live[Math.floor(Math.random()*live.length)];
+    pick.classList.add("dimmed"); pick.disabled = true;
+    if(live.length - 1 <= 1) $("#hintbtn").disabled = true;
+  };
 }
 
 function checkChoice(picked){
@@ -2097,16 +2265,18 @@ function showExamIntro(){
       '<li>If time runs out, unanswered questions count as wrong.</li>'+
       (b? '<li>Best full-deck exam: '+b.correct+'/'+b.total+' ('+Math.round(100*b.correct/b.total)+'%)'+(b.pass?' — a pass.':'.')+'</li>':'')+
     '</ul>'+
+    diffRow()+
     '<div class="btnrow"><button class="btn" id="startexam">Start exam · '+n+' questions · '+mins+' min</button></div>';
   $("#examscope").onchange = e=>{ state.scope.exam = e.target.value; save(); showExamIntro(); };
   $("#startexam").onclick = ()=> startExam(scope);
+  wireDiff(showExamIntro);
   renderNav(); window.scrollTo(0,0);
 }
 
 function startExam(scope){
   stopExamTimer();
   scope = scope || "__all";
-  const pool = examPool(scope);
+  const pool = applyDifficulty(examPool(scope), state.diff || "medium");
   exam = {qs: pool, i:0, answers:[], scope: scope, lv0: levelOf(state.xp.p),
           t0: Date.now(), end: Date.now()+examDuration(pool.length, scope)};
   xpQuiet = true; xpBatch = 0;          // no XP toasts mid-exam — they would leak right/wrong
